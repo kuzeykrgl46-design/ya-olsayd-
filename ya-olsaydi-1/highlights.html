@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Öne Çıkan Kapaklar</title>
+<style>html,body{margin:0;background:#0b1620}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+// Story highlight covers (1080x1920). Instagram shows the centre as a circle,
+// so every icon sits inside a ~560px circle around (540, 960).
+const W = 1080, H = 1920, CX = 540, CY = 960;
+const ctx = document.getElementById('c').getContext('2d');
+const NAVY = '#0a2a44', YEL = '#ffd166', WHITE = '#ffffff';
+const v = new URLSearchParams(location.search).get('v') || 'bolumler';
+
+function bg() {
+  const g = ctx.createRadialGradient(CX, CY - 80, 40, CX, CY, 900);
+  g.addColorStop(0, '#1d6fa5'); g.addColorStop(1, NAVY);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#ffffff12'; ctx.lineWidth = 5;
+  for (let r = 0; r < 26; r++) {
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 12) { const y = r * 78 + 20 + Math.sin(x * .013 + r) * 9; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke();
+  }
+}
+// fill + navy outline helper
+function shape(drawPath, fill = YEL, lw = 26) {
+  drawPath(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.lineWidth = lw; ctx.strokeStyle = NAVY; ctx.stroke();
+  ctx.save(); ctx.shadowColor = '#0006'; ctx.shadowBlur = 30; drawPath(); ctx.fillStyle = fill; ctx.fill(); ctx.restore();
+}
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+
+function bolumler() {
+  // play button in a rounded screen + small "?" badge
+  shape(() => rr(CX - 250, CY - 190, 500, 380, 70));
+  shape(() => { ctx.beginPath(); ctx.moveTo(CX - 70, CY - 110); ctx.lineTo(CX + 120, CY); ctx.lineTo(CX - 70, CY + 110); ctx.closePath(); }, NAVY, 0);
+  // "?" badge
+  shape(() => { ctx.beginPath(); ctx.arc(CX + 230, CY - 180, 90, 0, 7); }, WHITE, 22);
+  ctx.font = '900 130px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = NAVY; ctx.fillText('?', CX + 230, CY - 172);
+}
+
+function secimler() {
+  // poll card: three bars, the winning one ticked
+  shape(() => rr(CX - 260, CY - 250, 520, 500, 60), WHITE, 24);
+  const bars = [[.9, YEL], [.55, '#9fb7c9'], [.3, '#9fb7c9']];
+  bars.forEach(([p, c], i) => {
+    const y = CY - 170 + i * 135;
+    rr(CX - 200, y, 400, 90, 45); ctx.fillStyle = '#e4ecf2'; ctx.fill();
+    rr(CX - 200, y, 400 * p, 90, 45); ctx.fillStyle = c; ctx.fill();
+  });
+  // check mark on the winner
+  ctx.beginPath(); ctx.arc(CX + 150, CY - 125, 52, 0, 7); ctx.fillStyle = '#06d6a0'; ctx.fill();
+  ctx.lineWidth = 16; ctx.strokeStyle = WHITE; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(CX + 125, CY - 125); ctx.lineTo(CX + 145, CY - 103); ctx.lineTo(CX + 178, CY - 148); ctx.stroke();
+}
+
+function kamera() {
+  // video camera with code brackets on the body: behind the scenes / made with code
+  shape(() => rr(CX - 280, CY - 150, 400, 300, 50));
+  shape(() => { ctx.beginPath(); ctx.moveTo(CX + 130, CY - 60); ctx.lineTo(CX + 280, CY - 150); ctx.lineTo(CX + 280, CY + 150); ctx.lineTo(CX + 130, CY + 60); ctx.closePath(); });
+  // reels on top
+  shape(() => { ctx.beginPath(); ctx.arc(CX - 180, CY - 230, 80, 0, 7); }, YEL, 24);
+  shape(() => { ctx.beginPath(); ctx.arc(CX + 10, CY - 230, 80, 0, 7); }, YEL, 24);
+  ctx.fillStyle = NAVY; [CX - 180, CX + 10].forEach(x => { ctx.beginPath(); ctx.arc(x, CY - 230, 24, 0, 7); ctx.fill(); });
+  // </> on the body
+  ctx.font = '900 150px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = NAVY;
+  ctx.fillText('</>', CX - 80, CY + 8);
+}
+
+window.ready = document.fonts.load('900 100px Inter').then(() => {
+  bg(); ({ bolumler, secimler, kamera })[v](); return true;
+});
+</script></body></html>

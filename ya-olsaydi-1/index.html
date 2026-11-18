@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ya Olsaydı #1</title>
+<style>
+  :root { --bg:#0b1620; --fg:#f2f2f2; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg); font-family:Inter, system-ui, sans-serif; }
+  body { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
+  canvas { height:min(86vh, calc(100vw * 16 / 9)); aspect-ratio:9/16; border-radius:12px; box-shadow:0 10px 40px #0008; }
+  .ctrl { display:flex; gap:10px; align-items:center; width:min(90vw,480px); }
+  .ctrl input { flex:1; }
+  button { background:#1d6fa5; color:#fff; border:0; border-radius:8px; padding:8px 14px; font-weight:700; cursor:pointer; }
+  body.render { display:block; }
+  body.render canvas { height:auto; width:1080px; border-radius:0; box-shadow:none; }
+  body.render .ctrl { display:none; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div class="ctrl">
+  <button id="play">▶ Oynat</button>
+  <input id="seek" type="range" min="0" max="45" step="0.01" value="0">
+  <span id="tm">0.0s</span>
+</div>
+<script>
+const W = 1080, H = 1920, DUR = 45;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const COS = Math.cos(39 * Math.PI / 180);
+const K = 66;
+const MAPY = 840;
+
+// ---------- helpers ----------
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, p) => a + (b - a) * p;
+const ease = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+const easeOut = p => 1 - Math.pow(1 - p, 3);
+const backOut = p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+function rnd(i) { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// in/out visibility envelope
+function vis(t, a, b, fi = .35, fo = .35) { return clamp((t - a) / fi) * clamp((b - t) / fo); }
+
+// ---------- geography (lon, lat) ----------
+const borderWest = [[26.04,40.73],[26.32,41.05],[26.36,41.35],[26.62,41.6],[26.35,41.72],[26.6,41.95],[27.3,42.1],[27.8,41.98],[28.02,41.98]];
+const thraceBlack = [[28.3,41.6],[28.75,41.35],[29.1,41.24]];
+const thraceMarmara = [[29.02,41.03],[28.6,40.98],[28.0,41.0],[27.5,40.97],[27.2,40.65],[26.75,40.42],[26.4,40.12],[26.18,40.05],[26.22,40.32],[26.65,40.58],[26.3,40.62]];
+const anaBlack = [[29.15,41.22],[29.9,41.15],[30.6,41.15],[31.4,41.3],[32.3,41.75],[33.3,42.0],[34.2,41.97],[34.9,42.05],[35.15,42.02],[35.3,41.7],[36.1,41.65],[36.4,41.25],[37.1,41.15],[38.0,40.98],[38.9,41.03],[39.8,41.0],[40.4,40.98],[41.0,41.2]];
+const borderEast = [[41.55,41.52],[42.2,41.5],[42.8,41.58],[43.45,41.12],[43.7,40.98],[43.6,40.5],[43.75,40.15],[44.35,40.03],[44.78,39.71],[44.6,39.5],[44.1,39.35],[44.25,38.95],[44.3,38.4],[44.45,38.0],[44.25,37.85],[44.6,37.6],[44.79,37.15]];
+const borderSouth = [[44.3,37.05],[43.9,37.25],[43.3,37.32],[42.75,37.35],[42.36,37.11],[41.4,37.07],[40.0,36.83],[38.95,36.7],[38.0,36.84],[37.1,36.65],[36.67,36.83],[36.6,36.45],[36.68,36.23],[36.38,36.0],[36.15,35.82],[35.92,35.9]];
+const medCoast = [[35.97,36.2],[35.85,36.45],[36.17,36.6],[36.0,36.92],[35.6,36.6],[35.0,36.65],[34.6,36.78],[34.05,36.35],[33.6,36.15],[32.85,36.03],[32.3,36.25],[31.75,36.6],[31.0,36.85],[30.6,36.85],[30.55,36.45],[30.35,36.25],[29.7,36.15],[29.1,36.6],[28.6,36.75],[28.05,36.6],[27.6,36.75],[27.45,37.05],[27.25,37.35],[27.25,37.95],[26.75,38.2],[26.3,38.25],[26.5,38.45],[26.9,38.45],[26.75,38.75],[26.9,39.1],[26.65,39.3],[26.1,39.45],[26.15,39.95]];
+const marmaraS = [[26.38,40.12],[26.7,40.38],[27.3,40.42],[27.8,40.35],[28.4,40.4],[29.0,40.38],[29.9,40.72],[29.4,40.82],[29.05,41.0]];
+
+const thrace = [...borderWest, ...thraceBlack, ...thraceMarmara];
+const anatolia = [...anaBlack, ...borderEast, ...borderSouth, ...medCoast, ...marmaraS];
+
+const chunks = [
+  { pts: [...borderWest.slice().reverse(), [25.95,40.8],[25.5,40.85],[24.5,40.95],[21,40.9],[21,44.5],[28.4,44.5],[27.9,43.2],[27.7,42.7],[27.95,42.4]], d: [-5, 1.2] },
+  { pts: [...borderEast, [48,37.15],[48,45],[39.5,45],[41.0,43.0],[41.65,42.15],[41.6,41.65]], d: [5, 2.2] },
+  { pts: [[44.79,37.15], ...borderSouth, [35.85,35.5],[35.9,34.5],[35.6,32],[48,32],[48,37.15]], d: [1.5, -4.5] },
+];
+const cyprus = [[32.3,35.05],[32.9,35.4],[33.6,35.35],[34.6,35.7],[34.0,35.2],[33.9,34.95],[33.0,34.6],[32.4,34.75]];
+const borderSegs = [borderWest, borderEast, [[44.79,37.15], ...borderSouth]];
+const vanLake = (() => { const p = []; for (let i = 0; i < 40; i++) { const a = i / 40 * Math.PI * 2; const x = Math.cos(a) * .62, y = Math.sin(a) * .3; const r = -.45; p.push([42.95 + x * Math.cos(r) - y * Math.sin(r), 38.65 + x * Math.sin(r) + y * Math.cos(r) + (a > 3.6 && a < 5 ? .12 : 0)]); } return p; })();
+
+const CITY = {
+  edirne: [26.56,41.68], kars: [43.1,40.6], urfa: [38.79,37.16], van: [43.38,38.5], ankara: [32.86,39.93]
+};
+const NEW12 = [['Edirne',26.56,41.68],['Ardahan',42.7,41.11],['Kars',43.1,40.6],['Iğdır',44.04,39.92],['Ağrı',43.05,39.72],['Van',43.38,38.5],['Hakkari',43.74,37.58],['Şırnak',42.46,37.52],['Mardin',40.74,37.31],['Şanlıurfa',38.79,37.16],['Gaziantep',37.38,37.07],['Kilis',37.12,36.72]];
+
+// ---------- camera ----------
+const FULL = { lon: 35.35, lat: 39.0, z: 1.0 };
+const KEYS = [
+  [0, FULL], [4.0, { ...FULL, z: 1.04 }],
+  [5.4, { lon: 26.25, lat: 41.25, z: 3.1 }], [15.6, { lon: 26.25, lat: 41.25, z: 3.35 }],
+  [17.0, { lon: 43.25, lat: 40.35, z: 3.0 }], [21.6, { lon: 43.25, lat: 40.35, z: 3.2 }],
+  [23.0, { lon: 39.0, lat: 37.25, z: 3.0 }], [27.6, { lon: 39.0, lat: 37.25, z: 3.2 }],
+  [29.0, { lon: 43.1, lat: 38.7, z: 2.8 }], [32.6, { lon: 43.1, lat: 38.7, z: 3.0 }],
+  [34.4, FULL], [45, { ...FULL, z: 1.05 }],
+];
+function camera(t) {
+  for (let i = 0; i < KEYS.length - 1; i++) {
+    const [t0, a] = KEYS[i], [t1, b] = KEYS[i + 1];
+    if (t <= t1) {
+      const p = ease(prog(t, t0, t1));
+      // zoom interpolated in log space for smooth feel
+      return { lon: lerp(a.lon, b.lon, p), lat: lerp(a.lat, b.lat, p), z: Math.exp(lerp(Math.log(a.z), Math.log(b.z), p)) };
+    }
+  }
+  return KEYS[KEYS.length - 1][1];
+}
+let cam = FULL;
+function P(lon, lat) { const s = K * cam.z; return [W / 2 + (lon - cam.lon) * COS * s, MAPY - (lat - cam.lat) * s]; }
+function path(pts, off = [0, 0]) {
+  ctx.beginPath();
+  pts.forEach(([lo, la], i) => { const [x, y] = P(lo + off[0], la + off[1]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  ctx.closePath();
+}
+function polyline(pts) {
+  ctx.beginPath();
+  pts.forEach(([lo, la], i) => { const [x, y] = P(lo, la); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+}
+
+// ---------- drawing primitives ----------
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function font(w, s) { ctx.font = `${w} ${s}px Inter`; }
+function wrap(text, maxW) {
+  const words = text.split(' '); const lines = []; let cur = '';
+  for (const w of words) { const test = cur ? cur + ' ' + w : w; if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = w; } else cur = test; }
+  if (cur) lines.push(cur); return lines;
+}
+function pill(text, x, y, { size = 30, bg = '#111c', fg = '#fff', weight = 800, alpha = 1, pad = 16 } = {}) {
+  ctx.save(); ctx.globalAlpha *= alpha; font(weight, size);
+  const w = ctx.measureText(text).width + pad * 2, h = size * 1.55;
+  rr(x - w / 2, y - h / 2, w, h, h / 2); ctx.fillStyle = bg; ctx.fill();
+  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y + 1);
+  ctx.restore();
+}
+
+// ---------- background & map ----------
+function drawSea(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0a2a44'); g.addColorStop(.45, '#13507a'); g.addColorStop(1, '#0a2a44');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.strokeStyle = '#ffffff10'; ctx.lineWidth = 2;
+  for (let r = 0; r < 26; r++) {
+    const y0 = r * 76 + 20; ctx.beginPath();
+    for (let x = 0; x <= W; x += 20) { const y = y0 + Math.sin(x * .012 + t * 1.6 + r) * 7; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function jagged(seg, seed) {
+  const out = [];
+  for (let i = 0; i < seg.length - 1; i++) {
+    const [a, b] = [seg[i], seg[i + 1]];
+    for (let k = 0; k < 4; k++) {
+      const p = k / 4, n = (rnd(seed + i * 7 + k) - .5) * .09;
+      const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+      out.push([lerp(a[0], b[0], p) - dy / L * n, lerp(a[1], b[1], p) + dx / L * n]);
+    }
+  }
+  out.push(seg[seg.length - 1]); return out;
+}
+const cracks = borderSegs.map((s, i) => jagged(s, i * 100));
+
+function drawMap(t, { island }) {
+  const s = K * cam.z;
+  // neighbours
+  const drift = island ? ease(prog(t, 2.0, 4.0)) : 0;
+  chunks.forEach(c => {
+    const a = 1 - drift;
+    if (a <= 0) return;
+    ctx.save(); ctx.globalAlpha = a;
+    path(c.pts, [c.d[0] * drift, c.d[1] * drift]);
+    ctx.fillStyle = '#5d6b62'; ctx.fill();
+    ctx.restore();
+  });
+  // cyprus (a real island, stays)
+  path(cyprus); ctx.fillStyle = '#5d6b62'; ctx.fill();
+
+  // foam around Turkey (coast) — grows along former borders as island forms
+  ctx.save(); ctx.lineJoin = 'round';
+  [thrace, anatolia].forEach(p => { path(p); ctx.strokeStyle = '#bfe9ff55'; ctx.lineWidth = Math.max(4, 5 * cam.z); ctx.stroke(); });
+  ctx.restore();
+
+  // land
+  const lg = ctx.createLinearGradient(0, MAPY - 4 * s, 0, MAPY + 4 * s);
+  lg.addColorStop(0, '#f1dfaa'); lg.addColorStop(1, '#d9bf80');
+  [thrace, anatolia].forEach(p => {
+    path(p); ctx.fillStyle = lg; ctx.fill();
+    ctx.strokeStyle = '#9c7f45'; ctx.lineWidth = Math.max(1.5, 1.2 * cam.z); ctx.lineJoin = 'round'; ctx.stroke();
+  });
+  // lake van
+  path(vanLake); ctx.fillStyle = '#1d6fa5'; ctx.fill();
+
+  // land borders → cracks → coast
+  if (island) {
+    const cp = prog(t, .9, 2.2);
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    cracks.forEach((cr, i) => {
+      const n = Math.max(2, Math.floor(cr.length * cp));
+      if (cp <= 0) return;
+      polyline(cr.slice(0, n));
+      ctx.strokeStyle = `rgba(255,255,255,${.9 * (1 - drift)})`; ctx.lineWidth = 4 + 3 * Math.sin(t * 30 + i);
+      ctx.shadowColor = '#fff'; ctx.shadowBlur = 18; ctx.stroke();
+    });
+    ctx.restore();
+    if (drift > .2) {
+      ctx.save(); ctx.globalAlpha = clamp((drift - .2) / .5); ctx.lineJoin = 'round';
+      borderSegs.forEach(sg => { polyline(sg); ctx.strokeStyle = '#e6f7ff'; ctx.lineWidth = Math.max(3, 3 * cam.z); ctx.stroke(); });
+      ctx.restore();
+    }
+  } else {
+    ctx.save(); ctx.setLineDash([8, 8]);
+    borderSegs.forEach(sg => { polyline(sg); ctx.strokeStyle = '#6b5530'; ctx.lineWidth = 2; ctx.stroke(); });
+    ctx.restore();
+  }
+}
+
+function cityDot(name, ll, alpha = 1, color = '#e63946') {
+  if (alpha <= 0) return;
+  const [x, y] = P(...ll);
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.arc(x, y, 11, 0, 7); ctx.fillStyle = color; ctx.fill();
+  ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.stroke();
+  ctx.restore();
+  pill(name, x, y - 44, { size: 30, alpha });
+}
+
+// ---------- props ----------
+function ferry(x, y, sc, t) {
+  ctx.save(); ctx.translate(x, y + Math.sin(t * 3) * 4); ctx.rotate(Math.sin(t * 2.2) * .03); ctx.scale(sc, sc);
+  // wake
+  ctx.fillStyle = '#ffffff55';
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(70 + i * 26, 22, 14 - i * 2, 5, 0, 0, 7); ctx.fill(); }
+  // hull
+  ctx.beginPath(); ctx.moveTo(-80, 0); ctx.lineTo(80, 0); ctx.lineTo(62, 26); ctx.lineTo(-66, 26); ctx.closePath();
+  ctx.fillStyle = '#f4f4f4'; ctx.fill();
+  ctx.fillStyle = '#c62828'; ctx.fillRect(-72, 12, 146, 7);
+  // cabin
+  rr(-50, -30, 96, 30, 6); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.fillStyle = '#1d3557'; for (let i = 0; i < 5; i++) { rr(-42 + i * 18, -22, 12, 12, 3); ctx.fill(); }
+  // funnel + smoke
+  ctx.fillStyle = '#c62828'; ctx.fillRect(14, -52, 16, 22);
+  for (let i = 0; i < 3; i++) {
+    const p = (t * .7 + i / 3) % 1; ctx.globalAlpha = .6 * (1 - p);
+    ctx.beginPath(); ctx.arc(22 + p * 40, -60 - p * 50, 8 + p * 14, 0, 7); ctx.fillStyle = '#dfe6ea'; ctx.fill();
+  }
+  ctx.restore();
+}
+
+function car(x, y, sc, hue) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+  // luggage
+  ctx.fillStyle = '#8d6e63'; rr(-30, -58, 34, 16, 3); ctx.fill();
+  ctx.fillStyle = '#5d4037'; rr(6, -54, 24, 12, 3); ctx.fill();
+  ctx.fillStyle = '#3949ab'; rr(-18, -70, 30, 13, 3); ctx.fill();
+  ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-36, -42); ctx.lineTo(36, -42); ctx.stroke();
+  // body
+  ctx.fillStyle = `hsl(${hue},55%,45%)`;
+  rr(-48, -20, 96, 26, 8); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-30, -20); ctx.lineTo(-20, -42); ctx.lineTo(24, -42); ctx.lineTo(36, -20); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#bfe3f5'; ctx.beginPath(); ctx.moveTo(-24, -22); ctx.lineTo(-17, -38); ctx.lineTo(0, -38); ctx.lineTo(0, -22); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(4, -22); ctx.lineTo(4, -38); ctx.lineTo(21, -38); ctx.lineTo(30, -22); ctx.closePath(); ctx.fill();
+  // plate
+  ctx.fillStyle = '#fff'; rr(-14, -6, 28, 10, 2); ctx.fill();
+  ctx.fillStyle = '#1e40af'; ctx.fillRect(-14, -6, 5, 10);
+  // wheels
+  ctx.fillStyle = '#1b1b1b'; [-28, 28].forEach(wx => { ctx.beginPath(); ctx.arc(wx, 8, 11, 0, 7); ctx.fill(); });
+  ctx.fillStyle = '#9e9e9e'; [-28, 28].forEach(wx => { ctx.beginPath(); ctx.arc(wx, 8, 4, 0, 7); ctx.fill(); });
+  ctx.restore();
+}
+
+function umbrella(x, y, sc, snowy) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(0, -70); ctx.lineTo(4, 40); ctx.stroke();
+  const cols = ['#e63946', '#fff'];
+  for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(0, -72); ctx.arc(0, -72, 70, Math.PI + i * Math.PI / 6, Math.PI + (i + 1) * Math.PI / 6); ctx.closePath(); ctx.fillStyle = cols[i % 2]; ctx.fill(); }
+  if (snowy) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(0, -128, 46, 14, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(-40, -100, 22, 9, -.7, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(40, -100, 22, 9, .7, 0, 7); ctx.fill(); }
+  ctx.restore();
+}
+
+function lounger(x, y, sc, coat) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+  ctx.strokeStyle = '#6d4c41'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-60, 20); ctx.lineTo(30, 20); ctx.lineTo(60, -20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-50, 20); ctx.lineTo(-50, 38); ctx.moveTo(20, 20); ctx.lineTo(20, 38); ctx.stroke();
+  // person
+  ctx.fillStyle = coat ? '#2a4d8f' : '#f4a261';
+  rr(-50, -2, 80, 22, 10); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(26, 2); ctx.lineTo(52, -26); ctx.lineTo(60, -14); ctx.lineTo(36, 14); ctx.fill();
+  ctx.fillStyle = '#f1c27d'; ctx.beginPath(); ctx.arc(60, -34, 14, 0, 7); ctx.fill();
+  if (coat) {
+    ctx.fillStyle = '#c62828'; ctx.beginPath(); ctx.arc(60, -38, 14, Math.PI, 0); ctx.fill(); ctx.beginPath(); ctx.arc(60, -54, 6, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.fillStyle = '#e9c46a'; ctx.fillRect(44, -24, 30, 7); // scarf
+  } else {
+    ctx.fillStyle = '#111'; ctx.fillRect(50, -38, 22, 6); // sunglasses
+  }
+  ctx.restore();
+}
+
+function thermometer(x, y, value, hot, alpha) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y);
+  rr(-26, -170, 52, 230, 26); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 70, 42, 0, 7); ctx.fill();
+  const col = hot ? '#e63946' : '#4cc9f0';
+  const lvl = hot ? 0.95 : 0.12;
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 70, 32, 0, 7); ctx.fill();
+  rr(-12, 40 - 200 * lvl, 24, 200 * lvl + 10, 12); ctx.fill();
+  ctx.strokeStyle = '#9993'; ctx.lineWidth = 3;
+  for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(14, 30 - i * 24); ctx.lineTo(24, 30 - i * 24); ctx.stroke(); }
+  ctx.restore();
+  pill(value, x, y + 150, { size: 52, bg: hot ? '#e63946' : '#1f7fbf', alpha });
+}
+
+function vanMan(x, y, sc, t) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+  // legs
+  ctx.fillStyle = '#3a3a3a'; ctx.fillRect(-22, 40, 18, 70); ctx.fillRect(4, 40, 18, 70);
+  ctx.fillStyle = '#111'; rr(-26, 104, 24, 12, 4); ctx.fill(); rr(2, 104, 24, 12, 4); ctx.fill();
+  // body (vest)
+  ctx.fillStyle = '#5b4636'; rr(-36, -40, 72, 90, 18); ctx.fill();
+  // crossed arms
+  ctx.fillStyle = '#4a382b'; rr(-42, -4, 84, 24, 12); ctx.fill();
+  ctx.fillStyle = '#f1c27d'; ctx.beginPath(); ctx.arc(-40, 8, 9, 0, 7); ctx.arc(40, 8, 9, 0, 7); ctx.fill();
+  // head
+  ctx.fillStyle = '#f1c27d'; ctx.beginPath(); ctx.arc(0, -66, 28, 0, 7); ctx.fill();
+  // cap (kasket)
+  ctx.fillStyle = '#333'; ctx.beginPath(); ctx.ellipse(0, -86, 32, 14, 0, Math.PI, 0); ctx.fill(); ctx.fillRect(-32, -88, 64, 6); ctx.beginPath(); ctx.ellipse(14, -82, 22, 6, 0, 0, 7); ctx.fill();
+  // eyes: unimpressed, half-closed
+  ctx.strokeStyle = '#222'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(-14, -70); ctx.lineTo(-4, -70); ctx.moveTo(4, -70); ctx.lineTo(14, -70); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-15, -77); ctx.lineTo(-4, -79); ctx.moveTo(4, -79); ctx.lineTo(15, -77); ctx.stroke();
+  // mustache
+  ctx.fillStyle = '#2b1d14'; ctx.beginPath(); ctx.ellipse(-8, -55, 11, 5, .2, 0, 7); ctx.ellipse(8, -55, 11, 5, -.2, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+function speech(x, y, text, alpha) {
+  if (alpha <= 0) return;
+  ctx.save(); ctx.globalAlpha = alpha; font(800, 40);
+  const lines = wrap(text, 440); const w = 500, h = lines.length * 52 + 44;
+  const sc = backOut(clamp(alpha * 1.2)); ctx.translate(x, y); ctx.scale(sc, sc);
+  rr(-w / 2, -h, w, h, 28); ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-60, -2); ctx.lineTo(-110, 50); ctx.lineTo(-20, -2); ctx.fill();
+  ctx.fillStyle = '#111'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  lines.forEach((l, i) => ctx.fillText(l, 0, -h + 22 + 26 + i * 52));
+  ctx.restore();
+}
+
+function sadFace(x, y, r, t) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fillStyle = '#ffd166'; ctx.fill();
+  ctx.fillStyle = '#3a2a00'; ctx.beginPath(); ctx.arc(-r * .35, -r * .15, r * .1, 0, 7); ctx.arc(r * .35, -r * .15, r * .1, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#3a2a00'; ctx.lineWidth = r * .09; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(0, r * .5, r * .38, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  const tp = (t * .8) % 1;
+  ctx.fillStyle = '#4cc9f0'; ctx.beginPath(); ctx.ellipse(r * .38, r * .05 + tp * r * .5, r * .08, r * .13, 0, 0, 7); ctx.fill();
+  ctx.restore();
+}
+
+function binocularMan(x, y, sc) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
+  ctx.fillStyle = '#6c757d'; ctx.fillRect(-70, 30, 140, 160); // building
+  ctx.fillStyle = '#ffd16688'; for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) ctx.fillRect(-58 + c * 32, 46 + r * 36, 18, 22);
+  ctx.fillStyle = '#264653'; rr(-16, -30, 32, 60, 10); ctx.fill();
+  ctx.fillStyle = '#f1c27d'; ctx.beginPath(); ctx.arc(0, -46, 16, 0, 7); ctx.fill();
+  ctx.fillStyle = '#111'; rr(-26, -54, 18, 14, 4); ctx.fill(); rr(-26, -40, 18, 0, 0); ctx.fill(); rr(-12, -54, 4, 8, 2); ctx.fill();
+  ctx.restore();
+}
+
+// ---------- text layers ----------
+function title(lines, a, b, t, y = 330) {
+  const v = vis(t, a, b, .4, .35); if (v <= 0) return;
+  const sc = lerp(.85, 1, backOut(clamp((t - a) / .45)));
+  ctx.save(); ctx.globalAlpha = v; ctx.translate(W / 2, y); ctx.scale(sc, sc);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const hs = lines.map(l => l[1] * 1.08), total = hs.reduce((a, b) => a + b, 0);
+  let acc = -total / 2;
+  lines.forEach(([txt, size, color], i) => {
+    font(900, size);
+    const yy = acc + hs[i] / 2; acc += hs[i];
+    ctx.lineWidth = size * .16; ctx.strokeStyle = '#000a'; ctx.lineJoin = 'round'; ctx.strokeText(txt, 0, yy);
+    ctx.fillStyle = color; ctx.fillText(txt, 0, yy);
+  });
+  ctx.restore();
+}
+
+const SUBS = [
+  // [show, hide, text, speechStart, speechLength] — speech timing from the voiceover
+  [0.3, 4.3, 'Bir sabah uyandınız... ve Türkiye bir ada.', 0.4, 2.7],
+  [4.6, 10.0, "Edirne'den Bulgaristan'a artık arabayla değil... vapurla gidiliyor.", 4.7, 4.1],
+  [10.3, 16.0, 'Gurbetçilerin efsanevi sıla yolu sona erdi. Artık 3 gün feribot bekliyorlar.', 10.4, 4.9],
+  [16.3, 22.0, 'Kars artık bir sahil şehri. Plaj sezonu açıldı: eksi 30 derecede.', 16.4, 5.0],
+  [22.3, 28.0, "Şanlıurfa'nın denizi oldu. Hava 45 derece... deniz neredeyse kaynıyor.", 22.4, 4.9],
+  [28.3, 33.0, 'Vanlılar ise hiç şaşırmadı: "Bizim zaten denizimiz vardı."', 28.4, 3.8],
+  [33.3, 37.6, 'Ülke ada oldu. 12 şehir yeni sahil kazandı...', 33.5, 3.4],
+  [38.2, 42.0, "Ankara'ya yine deniz çıkmadı.", 38.4, 2.3],
+];
+function subtitles(t) {
+  for (const [a, b, txt, ss, sl] of SUBS) {
+    const v = vis(t, a, b, .25, .25); if (v <= 0) continue;
+    ctx.save(); ctx.globalAlpha = v; font(800, 46);
+    const lines = wrap(txt, 800), lh = 60, h = lines.length * lh + 36, cx = 515, y0 = 1330;
+    rr(cx - 430, y0, 860, h, 24); ctx.fillStyle = '#000000a8'; ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // reveal words progressively
+    const total = txt.split(' ').length; const shown = Math.ceil(total * clamp((t - ss + .15) / sl));
+    let count = 0;
+    lines.forEach((l, i) => {
+      const ws = l.split(' '); const lineW = ctx.measureText(l).width; let x = cx - lineW / 2;
+      ctx.textAlign = 'left';
+      ws.forEach(w => { count++; ctx.fillStyle = count <= shown ? '#ffffff' : '#ffffff40'; ctx.fillText(w, x, y0 + 18 + lh / 2 + i * lh); x += ctx.measureText(w + ' ').width; });
+    });
+    ctx.restore();
+  }
+}
+
+function badge() {
+  ctx.save(); font(900, 34);
+  const txt = 'YA OLSAYDI?', w = ctx.measureText(txt).width;
+  rr(56, 150, w + 120, 64, 16); ctx.fillStyle = '#ffd166'; ctx.fill();
+  ctx.fillStyle = '#111'; ctx.textBaseline = 'middle'; ctx.fillText(txt, 78, 183);
+  rr(78 + w + 14, 162, 54, 40, 10); ctx.fillStyle = '#111'; ctx.fill();
+  ctx.fillStyle = '#ffd166'; ctx.textAlign = 'center'; ctx.fillText('#1', 78 + w + 41, 183);
+  ctx.restore();
+}
+
+// ---------- scene ----------
+function render(t) {
+  cam = camera(t);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // camera shake when land cracks
+  const shake = t > 1 && t < 3.6 ? (1 - prog(t, 1, 3.6)) * 7 : 0;
+  ctx.translate(Math.sin(t * 47) * shake, Math.cos(t * 39) * shake);
+
+  drawSea(t);
+  drawMap(t, { island: true });
+
+  // ---- scene 2+3: Edirne ferry & queue ----
+  if (t > 4.4 && t < 16.2) {
+    const v = vis(t, 4.6, 16.0, .5, .4);
+    ctx.save(); ctx.globalAlpha = v;
+    cityDot('Edirne', CITY.edirne, 1);
+    const port = P(26.33, 41.52);
+    // pier
+    ctx.fillStyle = '#7a5c3a'; ctx.fillRect(port[0] - 110, port[1] - 8, 120, 16);
+    // ferry leaves westward
+    const fp = prog(t, 5.6, 10.2);
+    if (t < 10.4) ferry(port[0] - 200 - easeOut(fp) * 300, port[1] + 14, 1.35, t);
+    // arrow to Bulgaria
+    if (t < 10.2) {
+      const av = vis(t, 6.0, 10.0);
+      ctx.save(); ctx.globalAlpha = v * av; font(800, 34); ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText('← BULGARİSTAN', 60, port[1] - 150); ctx.restore();
+    }
+    // car queue
+    if (t > 10.0) {
+      const qv = vis(t, 10.2, 16.0, .5, .3);
+      ctx.globalAlpha = v * qv;
+      const creep = (t - 10) * 6;
+      for (let i = 0; i < 7; i++) {
+        const along = i * 118 - creep % 118 * 0 - Math.min(creep, 40);
+        const cx = port[0] + 70 + along + 40, cy = port[1] + 70 + i * 34;
+        car(cx, cy, 1.0, [8, 210, 140, 45, 280, 0, 190][i]);
+      }
+      // waiting counter
+      const hrs = Math.floor(lerp(0, 72, prog(t, 10.6, 15.0)));
+      pill(`BEKLEME: ${Math.floor(hrs / 24)} GÜN ${hrs % 24} SAAT`, W / 2, 1180, { size: 40, bg: '#e63946' });
+    }
+    ctx.restore();
+  }
+
+  // ---- scene 4: Kars snow beach ----
+  if (t > 15.8 && t < 22.4) {
+    const v = vis(t, 16.0, 22.1, .5, .4);
+    ctx.save(); ctx.globalAlpha = v;
+    cityDot('Kars', CITY.kars, 1);
+    const b = P(43.66, 40.42);
+    // ice floes in the new sea
+    ctx.fillStyle = '#e8f6ff';
+    for (let i = 0; i < 9; i++) { const [ix, iy] = P(44.25 + rnd(i) * .8, 39.75 + rnd(i + 20) * 1.1); ctx.beginPath(); ctx.ellipse(ix, iy, 16 + rnd(i + 5) * 16, 7 + rnd(i + 9) * 5, rnd(i) * .6, 0, 7); ctx.fill(); }
+    umbrella(b[0] + 30, b[1] - 20, 1.0, true);
+    lounger(b[0] - 10, b[1] + 30, 1.0, true);
+    thermometer(860, 1010, '-30°C', false, vis(t, 16.6, 22.0));
+    ctx.restore();
+    // snowfall over whole frame
+    ctx.save(); ctx.globalAlpha = v * .9; ctx.fillStyle = '#fff';
+    for (let i = 0; i < 140; i++) {
+      const x = (rnd(i) * W + Math.sin(t + i) * 30) % W, y = (rnd(i + 999) * H + t * (80 + rnd(i + 3) * 90)) % H;
+      ctx.beginPath(); ctx.arc(x, y, 2 + rnd(i + 7) * 4, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---- scene 5: Şanlıurfa hot sea ----
+  if (t > 21.8 && t < 28.4) {
+    const v = vis(t, 22.0, 28.1, .5, .4);
+    ctx.save(); ctx.globalAlpha = v;
+    // warm tint
+    ctx.fillStyle = 'rgba(255,120,40,0.16)'; ctx.fillRect(-20, -20, W + 40, H + 40);
+    cityDot('Şanlıurfa', CITY.urfa, 1);
+    // sun
+    const sx = 820, sy = 560;
+    ctx.save(); ctx.translate(sx, sy); ctx.rotate(t * .4);
+    ctx.fillStyle = '#ffb703'; for (let i = 0; i < 12; i++) { ctx.rotate(Math.PI / 6); ctx.fillRect(70, -6, 40, 12); }
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(sx, sy, 62, 0, 7); ctx.fillStyle = '#ffd166'; ctx.fill();
+    // bubbles + steam in the new southern sea
+    for (let i = 0; i < 26; i++) {
+      const [bx, by] = P(38.0 + rnd(i) * 1.8, 36.15 + rnd(i + 40) * .45);
+      const p = (t * .9 + rnd(i + 3)) % 1;
+      ctx.beginPath(); ctx.arc(bx, by - p * 26, 4 + p * 9, 0, 7); ctx.strokeStyle = `rgba(255,255,255,${.8 * (1 - p)})`; ctx.lineWidth = 3; ctx.stroke();
+    }
+    ctx.strokeStyle = '#ffffff70'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    for (let i = 0; i < 6; i++) {
+      const [bx, by] = P(38.2 + i * .28, 36.35); const p = (t * .6 + i / 6) % 1;
+      ctx.globalAlpha = v * (1 - p); ctx.beginPath();
+      for (let k = 0; k < 8; k++) { const yy = by - p * 140 - k * 12; const xx = bx + Math.sin(k * .9 + t * 4 + i) * 10; k ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = v;
+    const b = P(39.55, 36.74);
+    umbrella(b[0] - 40, b[1] - 10, .9, false);
+    lounger(b[0] - 60, b[1] + 30, .9, false);
+    thermometer(850, 900, '+45°C', true, vis(t, 22.6, 28.0));
+    ctx.restore();
+  }
+
+  // ---- scene 6: Van ----
+  if (t > 28.2 && t < 33.2) {
+    const v = vis(t, 28.4, 33.0, .5, .4);
+    ctx.save(); ctx.globalAlpha = v;
+    // lake glow
+    ctx.save(); path(vanLake); ctx.strokeStyle = '#7dd3fc'; ctx.lineWidth = 6 + Math.sin(t * 5) * 3; ctx.shadowColor = '#7dd3fc'; ctx.shadowBlur = 24; ctx.stroke(); ctx.restore();
+    const [lx, ly] = P(42.95, 38.66); pill('VAN GÖLÜ', lx, ly, { size: 30, bg: '#0b3b5ccc' });
+    const m = P(41.75, 38.2);
+    vanMan(m[0], m[1] + 40, 1.25, t);
+    speech(m[0] + 230, m[1] - 120, 'Bizim zaten denizimiz vardı.', vis(t, 29.2, 33.0, .4, .3));
+    ctx.restore();
+  }
+
+  // ---- scene 7: 12 new coastal cities ----
+  if (t > 33.4 && t < 42.2) {
+    const v = vis(t, 33.6, 42.0, .4, .4);
+    NEW12.forEach(([n, lo, la], i) => {
+      const a = clamp((t - (34.6 + i * .2)) / .25) * v;
+      if (a <= 0) return;
+      const [x, y] = P(lo, la); const s = backOut(clamp((t - (34.6 + i * .2)) / .35));
+      ctx.save(); ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(x, y, 12 * s, 0, 7); ctx.fillStyle = '#06d6a0'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke(); ctx.restore();
+    });
+    const cnt = Math.min(12, Math.max(0, Math.floor((t - 34.6) / .2) + 1));
+    if (t < 38.0) title([[`${cnt}`, 150, '#06d6a0'], ['YENİ SAHİL ŞEHRİ', 64, '#fff']], 34.4, 37.8, t, 380);
+  }
+
+  // ---- scene 8: Ankara punchline ----
+  if (t > 37.6 && t < 42.2) {
+    const v = vis(t, 37.8, 42.0, .35, .35);
+    // desaturate everything drawn so far
+    ctx.save(); ctx.globalAlpha = v; ctx.globalCompositeOperation = 'saturation'; ctx.fillStyle = '#808080'; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore();
+    ctx.save(); ctx.globalAlpha = v * .35; ctx.fillStyle = '#000'; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore();
+    const [ax, ay] = P(...CITY.ankara);
+    ctx.save(); ctx.globalAlpha = v;
+    const pulse = (t * 1.2) % 1;
+    ctx.beginPath(); ctx.arc(ax, ay, 14 + pulse * 70, 0, 7); ctx.strokeStyle = `rgba(230,57,70,${1 - pulse})`; ctx.lineWidth = 5; ctx.stroke();
+    ctx.restore();
+    cityDot('Ankara', CITY.ankara, v);
+    ctx.save(); ctx.globalAlpha = v;
+    binocularMan(ax + 170, ay + 150, .9);
+    sadFace(W / 2, 540, 62, t);
+    ctx.restore();
+    title([['ANKARA:', 60, '#fff'], ['HÂLÂ DENİZ YOK', 76, '#ffd166']], 38.4, 42.0, t, 350);
+  }
+
+  // ---- intro title ----
+  title([['YA TÜRKİYE', 92, '#fff'], ['BİR ADA', 120, '#ffd166'], ['OLSAYDI?', 92, '#fff']], 0.2, 4.3, t, 390);
+  // scene titles
+  title([['EDİRNE → BULGARİSTAN', 58, '#fff'], ['ARTIK VAPURLA', 72, '#ffd166']], 4.8, 10.0, t, 330);
+  title([['SILA YOLU', 72, '#fff'], ['FERİBOT KUYRUĞU', 66, '#ffd166']], 10.4, 16.0, t, 330);
+  title([['KARS SAHİLİ', 84, '#bde0fe']], 16.4, 22.0, t, 360);
+  title([['ŞANLIURFA SAHİLİ', 76, '#ffb703']], 22.4, 28.0, t, 360);
+  title([['VAN DENİZİ?', 84, '#7dd3fc']], 28.6, 33.0, t, 360);
+
+  // ---- CTA ----
+  if (t > 41.6) {
+    const v = clamp((t - 41.8) / .5);
+    ctx.save(); ctx.globalAlpha = v * .78; ctx.fillStyle = '#06121c'; ctx.fillRect(-20, -20, W + 40, H + 40); ctx.restore();
+    title([['SENCE BAŞKA', 80, '#fff'], ['NE DEĞİŞİRDİ?', 80, '#ffd166']], 41.9, 46, t, 680);
+    ctx.save(); ctx.globalAlpha = v; font(800, 44); ctx.fillStyle = '#fff'; ctx.textAlign = 'center';
+    ctx.fillText('Sıradaki bölümü', W / 2, 900); ctx.fillStyle = '#06d6a0'; font(900, 64); ctx.fillText('YORUMLAR SEÇECEK!', W / 2, 975);
+    const bob = Math.sin(t * 6) * 14;
+    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.moveTo(W / 2 - 50, 1080 + bob); ctx.lineTo(W / 2 + 50, 1080 + bob); ctx.lineTo(W / 2, 1150 + bob); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+
+  subtitles(t);
+  badge();
+  // fade from black at start
+  if (t < .4) { ctx.fillStyle = `rgba(0,0,0,${1 - t / .4})`; ctx.fillRect(-20, -20, W + 40, H + 40); }
+}
+
+window.renderAt = t => render(t);
+window.ready = document.fonts.load('900 40px Inter').then(() => document.fonts.load('800 40px Inter')).then(() => { render(0); return true; });
+
+// ---------- preview controls ----------
+if (new URLSearchParams(location.search).has('render')) document.body.classList.add('render');
+const seek = document.getElementById('seek'), tm = document.getElementById('tm'), btn = document.getElementById('play');
+let playing = false, start = 0, t0 = 0;
+function loop(now) {
+  if (!playing) return;
+  const t = t0 + (now - start) / 1000;
+  if (t >= DUR) { playing = false; btn.textContent = '▶ Oynat'; return; }
+  render(t); seek.value = t; tm.textContent = t.toFixed(1) + 's';
+  requestAnimationFrame(loop);
+}
+btn.onclick = () => {
+  playing = !playing; btn.textContent = playing ? '❚❚ Durdur' : '▶ Oynat';
+  if (playing) { t0 = +seek.value >= DUR - .1 ? 0 : +seek.value; start = performance.now(); requestAnimationFrame(loop); }
+};
+seek.oninput = () => { playing = false; btn.textContent = '▶ Oynat'; render(+seek.value); tm.textContent = (+seek.value).toFixed(1) + 's'; };
+</script>
+</body>
+</html>

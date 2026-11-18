@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Ya Olsaydı Logo v2</title>
+<style>html,body{margin:0;background:#0b1620}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1080"></canvas>
+<script>
+const W = 1080, C = W / 2;
+const ctx = document.getElementById('c').getContext('2d');
+const v = new URLSearchParams(location.search).get('v') || 'a';
+const NAVY = '#0a2a44', YEL = '#ffd166';
+
+function bg(c1, c2) {
+  const g = ctx.createRadialGradient(C, C * .85, 40, C, C, C * 1.15);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, W);
+}
+function qmark(x, y, size, { dot = true } = {}) {
+  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.font = `900 ${size}px Inter`; ctx.lineJoin = 'round';
+  // draw only the hook of "?" by clipping out the dot area when dot=false
+  if (!dot) { ctx.beginPath(); ctx.rect(0, 0, W, y - size * .2); ctx.clip(); }
+  ctx.lineWidth = size * .09; ctx.strokeStyle = NAVY; ctx.strokeText('?', x, y);
+  ctx.shadowColor = '#0007'; ctx.shadowBlur = 30; ctx.fillStyle = YEL; ctx.fillText('?', x, y);
+  ctx.restore();
+}
+function globe(x, y, r, spin = 0) {
+  ctx.save();
+  // outline ring
+  ctx.beginPath(); ctx.arc(x, y, r + r * .12, 0, 7); ctx.fillStyle = NAVY; ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.clip();
+  const g = ctx.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r);
+  g.addColorStop(0, '#4fb3e8'); g.addColorStop(1, '#155d8f');
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  // continents (generic blobs)
+  ctx.fillStyle = '#f1dfaa';
+  const blobs = [[-.45, -.35, .38, .26, .4], [.15, -.5, .3, .2, -.3], [.35, .05, .32, .42, .2], [-.3, .35, .22, .3, -.5], [-.6, .05, .14, .12, 0]];
+  blobs.forEach(([bx, by, rx, ry, rot]) => { ctx.beginPath(); ctx.ellipse(x + (bx + spin) * r, y + by * r, rx * r, ry * r, rot, 0, 7); ctx.fill(); });
+  // meridians / parallels
+  ctx.strokeStyle = '#ffffff40'; ctx.lineWidth = r * .04;
+  for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.ellipse(x, y, Math.abs(i) * r * .3 + .01, r, 0, 0, 7); ctx.stroke(); }
+  for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(x - r, y + i * r * .35); ctx.lineTo(x + r, y + i * r * .35); ctx.stroke(); }
+  // shading
+  const sh = ctx.createRadialGradient(x - r * .4, y - r * .4, r * .2, x, y, r * 1.05);
+  sh.addColorStop(0, '#ffffff00'); sh.addColorStop(1, '#00000066');
+  ctx.fillStyle = sh; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
+  ctx.restore();
+}
+
+function variantA() {
+  // "?" whose dot is a planet: what-if about anything in the world
+  bg('#1d6fa5', NAVY);
+  // stars
+  for (let i = 0; i < 70; i++) { const a = Math.sin(i * 91.7) * 43758.5; const r = a - Math.floor(a); const b = Math.sin(i * 12.9) * 9631.1; const s = b - Math.floor(b); ctx.globalAlpha = .25 + s * .5; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(r * W, s * W, 1.5 + s * 3, 0, 7); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  qmark(C, 700, 640, { dot: false });
+  globe(C, 735, 118, 0);
+  // orbit ring around the planet
+  ctx.save(); ctx.translate(C, 735); ctx.rotate(-.35);
+  ctx.beginPath(); ctx.ellipse(0, 0, 200, 54, 0, Math.PI * 1.02, Math.PI * 1.98, true); ctx.strokeStyle = YEL; ctx.lineWidth = 16; ctx.stroke();
+  ctx.restore();
+}
+
+function variantB() {
+  // alternate-reality portal with "?" in the centre
+  ctx.fillStyle = '#120a2e'; ctx.fillRect(0, 0, W, W);
+  const cols = ['#3a0ca3', '#4361ee', '#4cc9f0', '#7209b7', '#f72585'];
+  for (let i = 0; i < 26; i++) {
+    const r = 520 - i * 19, rot = i * .28;
+    ctx.save(); ctx.translate(C, C); ctx.rotate(rot);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 1.55);
+    ctx.strokeStyle = cols[i % cols.length]; ctx.globalAlpha = .35 + i / 40; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+  const core = ctx.createRadialGradient(C, C, 10, C, C, 230);
+  core.addColorStop(0, '#ffffffee'); core.addColorStop(.5, '#4cc9f055'); core.addColorStop(1, '#4cc9f000');
+  ctx.fillStyle = core; ctx.beginPath(); ctx.arc(C, C, 230, 0, 7); ctx.fill();
+  qmark(C, 770, 640);
+}
+
+function variantC() {
+  // clapperboard: scenes / animation (fits the SAHNOVA name)
+  bg('#1d6fa5', NAVY);
+  ctx.save(); ctx.translate(C, 600); ctx.scale(.8, .8);
+  // board
+  ctx.fillStyle = '#16181d'; ctx.beginPath(); ctx.roundRect(-330, -150, 660, 420, 36); ctx.fill();
+  ctx.lineWidth = 14; ctx.strokeStyle = '#0006'; ctx.stroke();
+  // top clapper (tilted open)
+  ctx.save(); ctx.translate(-330, -170); ctx.rotate(-.22);
+  ctx.beginPath(); ctx.roundRect(0, -110, 660, 110, 24); ctx.fillStyle = '#16181d'; ctx.fill();
+  ctx.clip(); ctx.fillStyle = '#fff';
+  for (let i = -1; i < 9; i++) { ctx.beginPath(); ctx.moveTo(i * 90 + 20, 0); ctx.lineTo(i * 90 + 70, -110); ctx.lineTo(i * 90 + 115, -110); ctx.lineTo(i * 90 + 65, 0); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+  // stripe band on board
+  ctx.save(); ctx.beginPath(); ctx.rect(-330, -150, 660, 80); ctx.clip();
+  ctx.fillStyle = '#fff';
+  for (let i = -1; i < 9; i++) { ctx.beginPath(); ctx.moveTo(-330 + i * 90 + 20, -70); ctx.lineTo(-330 + i * 90 + 70, -150); ctx.lineTo(-330 + i * 90 + 115, -150); ctx.lineTo(-330 + i * 90 + 65, -70); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+  ctx.restore();
+  qmark(C, 820, 360);
+}
+
+window.ready = document.fonts.load('900 100px Inter').then(() => {
+  ({ a: variantA, b: variantB, c: variantC })[v]();
+  return true;
+});
+</script></body></html>
