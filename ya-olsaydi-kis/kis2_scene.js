@@ -281,7 +281,7 @@ function render(t) {
   if (t < TL.hook[1] + .4) {
     calendarM(170, 1130, .9, clamp((t - .1) / .3), 'AĞUSTOS', '15');
     T = t; snowman(880, 1180, .9);
-    title([['KİM KAZANIRDI,', 70, '#06d6a0'], ['KİM KAYBEDERDİ?', 76, '#e63946']], .15, TL.hook[1], t, 400);
+    title([['KİM KAZANIR,', 76, '#06d6a0'], ['KİM KAYBEDER?', 76, '#e63946']], .15, TL.hook[1], t, 400);
   }
   // country "+" : skiers, then frozen mosquito
   if (inR([TL.up[0] - .05, TL.up[1] + .3])) {
@@ -330,7 +330,7 @@ function render(t) {
     if (t < TL.endSleep) {
       ctx.save(); ctx.globalAlpha = v * .6; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.restore();
       scale(W / 2, 780, 1.6, scaleTilt(t), v);
-      title([['SONUÇ:', 70, '#fff'], ['KAYBEDERDİK', 104, '#e63946']], TL.end[0] + .1, TL.endSleep, t, 400);
+      title([['SONUÇ:', 70, '#fff'], ['KAYBEDİYORUZ', 96, '#e63946']], TL.end[0] + .1, TL.endSleep, t, 400);
     } else {
       const p = easeOut(clamp((t - TL.endSleep) / .4));
       ctx.save(); ctx.translate((1 - p) * W, 0); sleepScene(t); ctx.restore();
