@@ -1,19 +1,19 @@
 // Kış Bölüm 4 (final) timing, from audio/take4.mp3 word timestamps (voice starts at 0.3 s video time).
-window.TL = {"hook": [0, 3.21], "sabah": [3.21, 6.61], "quote": 5.67, "baba": [6.61, 10.38], "again": 8.49, "kars": [10.38, 15.44], "karsLead": 1.31, "sivas": [15.44, 18.83], "bursa": [18.83, 21.33], "aksam": [21.33, 26.7], "gece": 24.01, "fin": [26.7, 35.6], "next": 29.01, "cut": 32.13, "ask": 32.8, "dur": 35.6};
+window.TL = {"hook": [0, 3.94], "sabah": [3.94, 8.18], "quote": 6.97, "baba": [8.18, 12.9], "again": 10.49, "kars": [12.9, 19.22], "karsLead": 1.66, "sivas": [19.22, 23.46], "bursa": [23.46, 26.58], "aksam": [26.58, 33.3], "gece": 29.94, "fin": [33.3, 44.1], "next": 36.18, "cut": 40.05, "ask": 40.89, "dur": 44.1};
 window.SUBS_DATA = [
-  [0.32, 3.21, "Kış hiç bitmese sıradan bir gün nasıl geçer?", 0.42, 2.69],
-  [3.26, 5.52, "Sabah annen seni yorganla birlikte kaldırıyor.", 3.36, 2.18],
-  [5.57, 6.61, "\"Okula böyle git!\"", 5.67, 0.77],
-  [6.66, 8.34, "Babalar kapının önünü kürekliyor.", 6.76, 1.6],
-  [8.39, 10.38, "Bitirdiği an yine kar yağıyor.", 8.49, 1.82],
-  [10.43, 12.5, "Yorumlardan gelen istek: Kars.", 10.53, 1.96],
-  [12.55, 15.44, "Karslılar mı? Onlar için bu hâlâ yaz tatili.", 12.65, 2.75],
-  [15.49, 18.83, "Sivas'ta kar o kadar yüksek ki evlere balkondan giriliyor.", 15.59, 3.23],
-  [18.88, 21.33, "Bursa'da Uludağ trafiği İstanbul'u geçiyor.", 18.98, 2.37],
-  [21.38, 24.01, "Akşam herkes sobanın başında, kestane patlıyor.", 21.48, 2.52],
-  [24.06, 26.7, "Gece de rahat uyuyorsun, çünkü sivrisinek yok.", 24.16, 2.47],
-  [26.75, 29.01, "Seri burada bitiyor ama kış bitmiyor.", 26.85, 2.15],
-  [29.06, 32.65, "Sıradaki seride tam maç varken internet bütün dünyada kesiliyor.", 29.16, 3.48],
-  [32.7, 35.6, "Sence hangi maç? Yorumlara yaz.", 32.8, 1.8]
+  [0.31, 3.94, "Kış hiç bitmese sıradan bir gün nasıl geçer?", 0.41, 3.36],
+  [3.99, 6.82, "Sabah annen seni yorganla birlikte kaldırıyor.", 4.09, 2.72],
+  [6.87, 8.18, "\"Okula böyle git!\"", 6.97, 0.96],
+  [8.23, 10.34, "Babalar kapının önünü kürekliyor.", 8.33, 2.0],
+  [10.39, 12.9, "Bitirdiği an yine kar yağıyor.", 10.49, 2.28],
+  [12.95, 15.54, "Yorumlardan gelen istek: Kars.", 13.05, 2.44],
+  [15.59, 19.22, "Karslılar mı? Onlar için bu hâlâ yaz tatili.", 15.69, 3.44],
+  [19.27, 23.46, "Sivas'ta kar o kadar yüksek ki evlere balkondan giriliyor.", 19.37, 4.04],
+  [23.51, 26.58, "Bursa'da Uludağ trafiği İstanbul'u geçiyor.", 23.61, 2.96],
+  [26.63, 29.94, "Akşam herkes sobanın başında, kestane patlıyor.", 26.73, 3.16],
+  [29.99, 33.3, "Gece de rahat uyuyorsun, çünkü sivrisinek yok.", 30.09, 3.08],
+  [33.35, 36.18, "Seri burada bitiyor ama kış bitmiyor.", 33.45, 2.68],
+  [36.23, 40.74, "Sıradaki seride tam maç varken internet bütün dünyada kesiliyor.", 36.33, 4.36],
+  [40.79, 44.1, "Sence hangi maç? Yorumlara yaz.", 40.89, 2.24]
 ];
-window.CAM_KEYS = [[0, {"lon": 35.35, "lat": 39, "z": 1}], [10.99, {"lon": 35.35, "lat": 39, "z": 1}], [11.69, {"lon": 43.1, "lat": 40.6, "z": 2.4}], [14.64, {"lon": 43.1, "lat": 40.6, "z": 2.4}], [15.34, {"lon": 37.02, "lat": 39.75, "z": 2.4}], [18.03, {"lon": 37.02, "lat": 39.75, "z": 2.4}], [18.73, {"lon": 29.06, "lat": 40.18, "z": 2.4}], [21.63, {"lon": 29.06, "lat": 40.18, "z": 2.4}], [21.73, {"lon": 35.35, "lat": 39, "z": 1}], [35.6, {"lon": 35.35, "lat": 39, "z": 1.03}]];
+window.CAM_KEYS = [[0, {"lon": 35.35, "lat": 39, "z": 1}], [13.86, {"lon": 35.35, "lat": 39, "z": 1}], [14.56, {"lon": 43.1, "lat": 40.6, "z": 2.4}], [18.42, {"lon": 43.1, "lat": 40.6, "z": 2.4}], [19.12, {"lon": 37.02, "lat": 39.75, "z": 2.4}], [22.66, {"lon": 37.02, "lat": 39.75, "z": 2.4}], [23.36, {"lon": 29.06, "lat": 40.18, "z": 2.4}], [26.88, {"lon": 29.06, "lat": 40.18, "z": 2.4}], [26.98, {"lon": 35.35, "lat": 39, "z": 1}], [44.1, {"lon": 35.35, "lat": 39, "z": 1.03}]];

@@ -1,11 +1,11 @@
-"""Procedural soundtrack for Ya Olsaydı #2 Kış Bölüm 4 (final, 35.6 s, royalty-free). Timings follow timeline4.js."""
+"""Procedural soundtrack for Ya Olsaydı #2 Kış Bölüm 4 (final, 44.1 s, royalty-free). Timings follow timeline4.js."""
 import sys
 import numpy as np
 from scipy.signal import butter, sosfilt, fftconvolve
 from scipy.io import wavfile
 
 SR = 44100
-DUR = 35.6
+DUR = 44.1
 N = int(SR * DUR)
 rng = np.random.default_rng(7)
 L = np.zeros(N)
@@ -125,9 +125,9 @@ def pluck_run(at, notes, step, gain):
 
 
 # ---------------- Bölüm 4 arrangement (video seconds, see timeline4.js) ----------------
-SABAH, QUOTE, BABA, AGAIN, KARS, SIVAS, BURSA = 3.21, 5.67, 6.61, 8.49, 10.38, 15.44, 18.83
-AKSAM, GECE, FIN, NEXT, CUT, ASK = 21.33, 24.01, 26.7, 29.01, 32.13, 32.8
-SCENES = [SABAH, BABA, KARS, 11.69, SIVAS, BURSA, AKSAM, GECE, FIN]
+SABAH, QUOTE, BABA, AGAIN, KARS, SIVAS, BURSA = 3.94, 6.97, 8.18, 10.49, 12.9, 19.22, 23.46
+AKSAM, GECE, FIN, NEXT, CUT, ASK = 26.58, 29.94, 33.3, 36.18, 40.05, 40.89
+SCENES = [SABAH, BABA, KARS, 14.56, SIVAS, BURSA, AKSAM, GECE, FIN]
 
 
 def bells(t0, t1):
@@ -145,7 +145,7 @@ section(0.3, AKSAM, MAJOR, 0.05, 0.06, 0.04, True)            # the day: light, 
 bells(0.3, AKSAM)
 pluck_run(QUOTE - 0.05, [72, 76, 79, 84], 0.07, 0.07)         # "Okula böyle git!" sting
 pluck_run(AGAIN, [96, 91, 88, 84, 79], 0.06, 0.06)            # snow falls again
-for at, root in [(12.35, 81), (15.79, 79), (19.18, 83)]:
+for at, root in [(15.39, 81), (19.57, 79), (23.81, 83)]:
     pluck_run(at, [root, root + 4, root + 7], 0.09, 0.05)
 section(AKSAM, FIN, MAJOR, 0.025, 0.0, 0.045, False)          # cosy evening: soft, no timpani
 pluck_run(GECE + 0.1, [77, 81, 84, 89], 0.25, 0.04)           # lullaby
