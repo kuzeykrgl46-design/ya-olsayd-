@@ -3,7 +3,7 @@
 const { chromium } = require('playwright');
 const { spawn } = require('child_process');
 const path = require('path');
-const FPS = 30, DUR = 33, OUT = process.argv[2] || 'ya-olsaydi-2-kis-bolum4-final.mp4';
+const FPS = 30, DUR = 35.6, OUT = process.argv[2] || 'ya-olsaydi-2-kis-bolum4-final.mp4';
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
