@@ -3,7 +3,7 @@
 // TL holds scene boundaries (video time). Until the voiceover exists these are estimates; timeline.js overrides them.
 let T = 0;
 const TL = window.TL || {
-  hook: [0, 4], freeze: 2.9, modem: [4, 8], kumanda: [8, 12], soru: [12, 16], balkon: [16, 22], kanka: 18.5, gol: [22, 28], kim: 24.5, dur: 28,
+  hook: [0, 4], freeze: 2.9, modem: [4, 8], kumanda: [8, 12], kahve: [12, 17], soru: [17, 21], balkon: [21, 27], kanka: 23.5, gol: [27, 33], kim: 29.5, dur: 33,
 };
 const SUBS = window.SUBS_DATA || [];
 const TR_RED = '#e30a17';
@@ -63,10 +63,16 @@ function human(x, y, s, o = {}) {
   let hands;
   const P = {
     down: [[-.25, -.05], [.25, .05]], handsHead: [[-2.6, -3.6], [2.6, 3.6]], cupEar: [[-.2, -.05], [2.7, 3.7]],
-    shout: [[-2.4, -2.9], [2.4, 2.9]], remote: [[-.5, 1.4], [1.9, 2.9 - Math.abs(Math.sin(t * 9)) * 1.5]], hipsBack: [[-.6, .7], [.6, -.7]],
+    shout: [[-2.4, -2.9], [2.4, 2.9]], phoneUp: [[-.3, -.1], [3.0 + Math.sin(t * 3 + bob) * .15, 3.1]], remote: [[-.5, 1.4], [1.9, 2.9 - Math.abs(Math.sin(t * 9)) * 1.5]], hipsBack: [[-.6, .7], [.6, -.7]],
   }[pose];
   const L = arm(-32, P[0][0], P[0][1]), R = arm(32, P[1][0], P[1][1]);
   hands = [L, R];
+  if (pose === 'phoneUp') {
+    const [hx, hy] = R; ctx.save(); ctx.translate(hx, hy - 22);
+    ctx.fillStyle = '#111'; rr(-14, -26, 28, 50, 6); ctx.fill(); ctx.fillStyle = '#4cc9f0'; rr(-11, -22, 22, 40, 4); ctx.fill();
+    ctx.strokeStyle = '#e63946'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-6, -10); ctx.lineTo(6, 4); ctx.moveTo(6, -10); ctx.lineTo(-6, 4); ctx.stroke();
+    ctx.restore();
+  }
   if (pose === 'remote') {
     const [hx, hy] = R, hit = Math.abs(Math.sin(t * 9));
     ctx.save(); ctx.translate(hx, hy); ctx.rotate(-.5); ctx.fillStyle = '#212529'; rr(-8, -34, 16, 46, 6); ctx.fill(); ctx.fillStyle = '#e63946'; ctx.beginPath(); ctx.arc(0, -26, 3.5, 0, 7); ctx.fill(); ctx.restore();
@@ -289,6 +295,45 @@ function kumandaScene(t) {
   vignette(.5);
 }
 
+// ---------- the kahvehane: dayılar play okey, the young look for signal ----------
+function okeyTable(x, y, t) {
+  softShadow(() => { ctx.fillStyle = '#7f5539'; rr(x - 170, y, 340, 12, 6); ctx.fill(); }, 20, 'rgba(0,0,0,.4)', 8);
+  ctx.fillStyle = '#2d6a4f'; rr(x - 160, y - 6, 320, 14, 6); ctx.fill();
+  
+  const cols = ['#e63946', '#111', '#ffb703', '#3a86ff'];
+  for (let r = 0; r < 2; r++) { ctx.fillStyle = '#d4a373'; rr(x - 120 + r * 130, y - 22, 110, 18, 4); ctx.fill();
+    for (let i = 0; i < 6; i++) { ctx.fillStyle = '#fffaf0'; rr(x - 116 + r * 130 + i * 17.5, y - 42, 15, 22, 3); ctx.fill(); ctx.fillStyle = cols[(i + r) % 4]; font(900, 12); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String((i * 3 + r * 5) % 13 + 1), x - 108.5 + r * 130 + i * 17.5, y - 30); } }
+  ctx.fillStyle = '#c96f3b'; rr(x + 120, y - 34, 16, 28, 4); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(x + 114, y - 8, 28, 4); // tea glass
+  steam(x + 128, y - 40, t, 2, 40, .4);
+}
+function kahveScene(t) {
+  const wg = ctx.createLinearGradient(0, 0, 0, H); wg.addColorStop(0, '#5e3b2c'); wg.addColorStop(1, '#3b2418'); ctx.fillStyle = wg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#ffffff0a'; for (let i = 0; i < 12; i++) ctx.fillRect(0, 300 + i * 40, W, 2);
+  ctx.fillStyle = '#2b1810'; ctx.fillRect(0, 1360, W, H - 1360);
+  // sign + wall TV (frozen)
+  ctx.save(); ctx.translate(540, 370); rr(-300, -54, 600, 108, 18); ctx.fillStyle = '#1d3557'; ctx.fill(); ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 5; rr(-290, -44, 580, 88, 12); ctx.stroke(); ctx.fillStyle = '#ffd166'; font(900, 60); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('KIRAATHANE', 0, 3); ctx.restore();
+  tvSet(540, 640, 520, 300, t, true);
+  // the young: standing, phones up, looking for signal
+  castMember(9, 140, 1010, 1.05, { pose: 'phoneUp', face: 'shock', t, bob: 1, shadow: false });
+  castMember(0, 940, 1000, 1.05, { pose: 'phoneUp', face: 'angry', t, bob: 2, shadow: false });
+  castMember(3, 820, 1030, .95, { pose: 'phoneUp', face: 'shock', t, bob: 3, shadow: false });
+  // the dayılar: calmly back to okey
+  const D = [
+    { shirt: '#6f4e37', hair: '#d0d0d0', hairStyle: 'grey', mustache: true, cap: '#4a3b35', skin: '#d9a37a' },
+    { shirt: '#495057', hair: '#bbb', hairStyle: 'bald', mustache: true, glasses: true, skin: '#e0a47a' },
+    { shirt: '#3d5a80', hair: '#888', hairStyle: 'short', beard: true, cap: '#2b2d42', skin: '#c68642' },
+  ];
+  human(400, 1140, 1.15, { ...D[0], face: 'happy', t, bob: 4, shadow: false });
+  human(680, 1140, 1.15, { ...D[1], face: 'calm', t, bob: 5, shadow: false });
+  human(540, 1100, 1.0, { ...D[2], face: 'happy', t, bob: 6, shadow: false });
+  okeyTable(540, 1180, t);
+  const cg = ctx.createLinearGradient(0, 1186, 0, 1360); cg.addColorStop(0, '#9c2a2a'); cg.addColorStop(1, '#6b1d1d'); ctx.fillStyle = cg; rr(380, 1186, 320, 174, 10); ctx.fill();
+  ctx.strokeStyle = '#ffffff22'; ctx.lineWidth = 3; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(400 + i * 56, 1190); ctx.lineTo(400 + i * 56, 1356); ctx.stroke(); }
+  pill('📶 ÇEKİM YOK', 870, 830, { size: 34, bg: '#e63946', fg: '#fff', alpha: clamp((t - TL.kahve[0] - .5) / .25) });
+  pill('🎲 OKEYE DEVAM', 540, 1270, { size: 34, bg: '#2d6a4f', fg: '#fff', alpha: clamp((t - TL.kahve[0] - 1.2) / .25) });
+  vignette(.5);
+}
+
 // ---------- the comment question ----------
 function soruScene(t) {
   livingRoom(t, 'rgba(120,140,200,A)');
@@ -343,6 +388,7 @@ function render(t) {
   if (t < TL.hook[1] + .3) { hookScene(t); title([['TÜRKİYE', 96, '#fff'], ['FİNALDE! ⚽', 90, '#ffd166']], .1, TL.freeze, t, 360); }
   if (inR(TL.modem)) { sceneSlide(t, TL.modem[0], () => modemScene(t)); title([['HERKES', 80, '#fff'], ['AYNI ANDA', 96, '#2ecc71']], TL.modem[0] + .1, TL.modem[1], t, 360); }
   if (inR(TL.kumanda)) { sceneSlide(t, TL.kumanda[0], () => kumandaScene(t)); title([['BABALAR', 104, '#fff']], TL.kumanda[0] + .1, TL.kumanda[1], t, 360); pill('📺 KUMANDA SUÇLU', 540, 1590, { size: 44, bg: TR_RED, fg: '#fff', alpha: clamp((t - TL.kumanda[0] - .8) / .25) }); }
+  if (inR(TL.kahve)) sceneSlide(t, TL.kahve[0], () => kahveScene(t));
   if (inR(TL.soru)) sceneSlide(t, TL.soru[0], () => soruScene(t));
   if (t >= TL.balkon[0] - .05) {
     sceneSlide(t, TL.balkon[0], () => balkonScene(t, t >= TL.gol[0]));
