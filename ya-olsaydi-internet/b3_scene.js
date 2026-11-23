@@ -128,7 +128,7 @@ function taksiScene(t) {
   ctx.fillStyle = '#111'; [-200, 200].forEach(dx => { ctx.beginPath(); ctx.arc(x + dx, y, 60, 0, 7); ctx.fill(); ctx.fillStyle = '#adb5bd'; ctx.beginPath(); ctx.arc(x + dx, y, 24, 0, 7); ctx.fill(); ctx.fillStyle = '#111'; });
   // dead navigation phone on the dashboard
   phoneSmall(x + 120, y - 210, 1.6, .1);
-  speech(x - 60, y - 380, 'Ben yolu bilirim abi!', vis(t, TL.taksi[0] + 1.2, TL.taksi[1] + .3, .2, .2));
+  speech(x - 60, y - 380, 'Ben yolu bilirim abi!', vis(t, (TL.ben || TL.taksi[0] + 1.2) - .1, TL.taksi[1] + .3, .2, .2));
   flagBadge('🇹🇷 TÜRKİYE', 540, 1450);
 }
 
