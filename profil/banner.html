@@ -1,0 +1,43 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>Ya Olsaydı YouTube kapak</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#0b1620}canvas{display:block}</style></head>
+<body><canvas id="c" width="2560" height="1440"></canvas>
+<script>
+// YouTube channel banner 2560x1440. Safe area for every device: centre 1546x423 (x 507-2053, y 508-931).
+const W = 2560, H = 1440, ctx = document.getElementById('c').getContext('2d');
+const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+function rnd(i) { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+window.ready = (async () => {
+  await document.fonts.load('900 80px Inter'); await document.fonts.load('800 40px Inter');
+  const [logo, ada, kis, net, net2] = await Promise.all(['profil-resmi.png', '../ya-olsaydi-1/kapak.png', '../ya-olsaydi-kis/kapak-kis-bolum1.png', '../ya-olsaydi-internet/kapak-internet-bolum1.png', '../ya-olsaydi-internet/kapak-internet-bolum2.png'].map(load));
+  const g = ctx.createRadialGradient(W / 2, H / 2, 100, W / 2, H / 2, W * .7); g.addColorStop(0, '#16467a'); g.addColorStop(1, '#06162b');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 500; i++) { ctx.fillStyle = `rgba(255,255,255,${.25 + rnd(i + 4) * .6})`; ctx.beginPath(); ctx.arc(rnd(i) * W, rnd(i + 3) * H, 1.5 + rnd(i + 8) * 2.5, 0, 7); ctx.fill(); }
+  // gentle waves
+  ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 3;
+  for (let r = 0; r < 14; r++) { ctx.beginPath(); for (let x = 0; x <= W; x += 20) { const y = 80 + r * 100 + Math.sin(x / 140 + r) * 12; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.stroke(); }
+  // series covers as tilted cards on both sides (visible on desktop/TV, outside the phone safe area)
+  const card = (img, cx, cy, rot, label) => {
+    const w = 200, h = w * 16 / 9; ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+    ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 16; rr(-w / 2, -h / 2, w, h, 22); ctx.fillStyle = '#000'; ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.save(); rr(-w / 2, -h / 2, w, h, 22); ctx.clip(); ctx.drawImage(img, -w / 2, -h / 2, w, h); ctx.restore();
+    rr(-w / 2, -h / 2, w, h, 22); ctx.lineWidth = 6; ctx.strokeStyle = '#ffd166'; ctx.stroke();
+    ctx.restore();
+  };
+  card(ada, 160, 720, -.12); card(kis, 370, 750, .08);
+  card(net2, 2190, 750, -.08); card(net, 2400, 720, .12);
+  // centre block
+  const cy = 720;
+  ctx.save(); ctx.beginPath(); ctx.arc(800, cy, 135, 0, 7); ctx.clip(); ctx.drawImage(logo, 665, cy - 135, 270, 270); ctx.restore();
+  ctx.beginPath(); ctx.arc(800, cy, 135, 0, 7); ctx.lineWidth = 8; ctx.strokeStyle = '#ffd166'; ctx.stroke();
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const stroke = (txt, x, y, size, col) => { ctx.font = `900 ${size}px Inter`; ctx.lineJoin = 'round'; ctx.lineWidth = size * .14; ctx.strokeStyle = '#000a'; ctx.strokeText(txt, x, y); ctx.fillStyle = col; ctx.fillText(txt, x, y); };
+  stroke('YA OLSAYDI?', 980, cy - 70, 132, '#ffd166');
+  stroke('Türkiye’de her şey tersine dönse?', 984, cy + 40, 54, '#ffffff');
+  ctx.font = '800 34px Inter'; const tag = '🌊 Ada  ·  ❄️ Kış  ·  📵 İnternet  ·  Konuları siz seçin 👇';
+  const tw = ctx.measureText(tag).width; rr(978, cy + 92, tw + 40, 58, 29); ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fill(); ctx.fillStyle = '#e7ecef'; ctx.fillText(tag, 998, cy + 122);
+  window.maxX = Math.max(998 + tw + 20, (() => { ctx.font = '900 132px Inter'; return 980 + ctx.measureText('YA OLSAYDI?').width; })());
+  return true;
+})();
+</script></body></html>
