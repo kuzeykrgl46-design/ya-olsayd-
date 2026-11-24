@@ -115,22 +115,61 @@ function bike(x, y, s, t) {
   ctx.strokeStyle = '#10b981'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(-70, 0); ctx.lineTo(-10, -70); ctx.lineTo(50, -70); ctx.lineTo(70, 0); ctx.moveTo(-10, -70); ctx.lineTo(0, 0); ctx.lineTo(-70, 0); ctx.moveTo(50, -70); ctx.lineTo(56, -100); ctx.stroke();
   ctx.restore();
 }
+function trophy(x, y, s) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  const g = ctx.createLinearGradient(-40, -120, 40, 0); g.addColorStop(0, '#fef08a'); g.addColorStop(1, '#ca8a04'); ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(-34, -130); ctx.quadraticCurveTo(-40, -60, -10, -40); ctx.lineTo(-14, -10); ctx.lineTo(14, -10); ctx.lineTo(10, -40); ctx.quadraticCurveTo(40, -60, 34, -130); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -138, 24, 0, 7); ctx.fill();
+  ctx.fillStyle = '#166534'; rr(-26, -10, 52, 22, 4); ctx.fill(); ctx.fillStyle = '#ca8a04'; rr(-20, 12, 40, 10, 3); ctx.fill();
+  ctx.restore();
+}
+function scorePhone(cx, cy, s, t, open) {
+  ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); ctx.rotate(-.04);
+  softShadow(() => { ctx.fillStyle = '#111'; rr(-160, -300, 320, 600, 42); ctx.fill(); }, 40, 'rgba(0,0,0,.5)', 14);
+  ctx.fillStyle = '#f8fafc'; rr(-142, -272, 284, 544, 28); ctx.fill();
+  ctx.fillStyle = '#111'; font(800, 20); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('19:42', -118, -246); ctx.textAlign = 'right'; ctx.fillStyle = '#16a34a'; ctx.fillText('📶 4.5G', 118, -246);
+  ctx.fillStyle = '#e9ecef'; rr(-120, -220, 240, 40, 20); ctx.fill(); ctx.fillStyle = '#6c757d'; font(700, 18); ctx.textAlign = 'left'; ctx.fillText('🔒 canli-skor…', -104, -200);
+  if (!open) { ctx.strokeStyle = '#adb5bd'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(0, -10, 44, t * 6, t * 6 + 4.2); ctx.stroke(); }
+  else {
+    ctx.fillStyle = '#0f172a'; rr(-120, -160, 240, 44, 10); ctx.fill(); ctx.fillStyle = '#fde047'; font(900, 22); ctx.textAlign = 'center'; ctx.fillText('DÜNYA KUPASI · FİNAL', 0, -138);
+    ctx.fillStyle = '#fff'; rr(-120, -104, 240, 190, 14); ctx.fill(); ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#16a34a'; rr(-30, -96, 60, 30, 8); ctx.fill(); ctx.fillStyle = '#fff'; font(900, 20); ctx.fillText('MS', 0, -81);
+    trFlag(-112, -96, 48, 32); brFlag(64, -96, 48, 32);
+    ctx.fillStyle = '#111'; font(900, 60); ctx.fillText('2 - 1', 0, -26); font(800, 22); ctx.fillText('TÜR', -73, 10); ctx.fillText('BRA', 73, 10);
+    ctx.fillStyle = '#6b7280'; font(700, 18); ctx.fillText("⚽ 90+4' (P)", 0, 50);
+    trophy(0, 230, .9);
+  }
+  ctx.restore();
+}
+function celebrate(t) {
+  const sg = ctx.createLinearGradient(0, 0, 0, H); sg.addColorStop(0, '#0b132b'); sg.addColorStop(1, '#1b263b'); ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
+  // fireworks
+  for (let k = 0; k < 4; k++) { const ph = (t * .7 + k * .27) % 1, fx = 180 + k * 240, fy = 420 + (k % 2) * 140; ctx.save(); ctx.globalAlpha = 1 - ph; for (let i = 0; i < 14; i++) { const a = i / 14 * 6.28; ctx.strokeStyle = [TR_RED, '#fff', '#fde047'][i % 3]; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(fx + Math.cos(a) * ph * 40, fy + Math.sin(a) * ph * 40); ctx.lineTo(fx + Math.cos(a) * ph * 120, fy + Math.sin(a) * ph * 120); ctx.stroke(); } ctx.restore(); }
+  [[0, 560, 280, '#415a77'], [270, 500, 270, '#4f6d8f'], [530, 580, 260, '#3d5a80'], [780, 520, 300, '#415a77']].forEach(([x, y, w, c], k) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, 1250 - y); for (let r = 0; r < 5; r++) for (let q = 0; q < 3; q++) { ctx.fillStyle = '#ffd166'; ctx.fillRect(x + 30 + q * 80, y + 40 + r * 120, 46, 66); } trFlag(x + w / 2 - 40, y + 20, 80, 54, t * 4 + k); });
+  ctx.fillStyle = '#334155'; ctx.fillRect(0, 1250, W, H - 1250);
+  // players lifting the cup in the middle
+  [[400, -1], [680, 1]].forEach(([x], i) => { const j = Math.abs(Math.sin(t * 6 + i)) * 20; player(x, 1060 - j, 3.2, { shirt: TR_RED, shorts: '#fff', socks: TR_RED, stripe: '#fff' }, t, 0, true); });
+  const jj = Math.abs(Math.sin(t * 6)) * 20; trophy(540, 860 - jj, 1.6);
+  // notification bubbles from everyone's phones
+  [[130, 0], [950, 7]].forEach(([x, id], i) => { castMember(id, x, 1200, .95, { pose: 'shout', face: 'shout', t, bob: i, shadow: false });
+    for (let k = 0; k < 3; k++) { const q = (t * 1.2 + k / 3 + i * .3) % 1; ctx.save(); ctx.globalAlpha = 1 - q; ctx.translate(x + Math.sin(k * 2 + i) * 40, 960 - q * 220); rr(-56, -18, 112, 36, 18); ctx.fillStyle = '#ef4444'; ctx.fill(); ctx.fillStyle = '#fff'; font(800, 20); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🔔 +' + (999 - k * 123 - i * 77), 0, 1); ctx.restore(); } });
+  const bx = ((t - TL.geri[0]) * 170) % 1400 - 200;
+  bike(bx, 1240, .9, t); human(bx, 1150, .9, { shirt: '#10b981', hair: '#5a3825', hairStyle: 'short', face: 'calm', skin: '#f1c27d', t, shadow: false });
+}
 function geriScene(t) {
-  const p = clamp((t - TL.geri[0]) / 1.2);
-  if (p < 1) { spaceBack(t); brightGlobe(540, 900, lerp(420, 600, p), 20 + t * 6, p); return; }
-  // street: everyone's phone exploding with notifications, the cyclist doesn't care
-  const sg = ctx.createLinearGradient(0, 0, 0, H); sg.addColorStop(0, '#7dd3fc'); sg.addColorStop(1, '#e0f2fe'); ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
-  [[0, 460, 280, '#fda4af'], [270, 400, 270, '#fcd34d'], [530, 480, 260, '#a7f3d0'], [780, 420, 300, '#c4b5fd']].forEach(([x, y, w, c]) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, 1250 - y); ctx.fillStyle = '#ffffffaa'; for (let r = 0; r < 6; r++) for (let q = 0; q < 3; q++) ctx.fillRect(x + 30 + q * 80, y + 40 + r * 120, 46, 66); });
-  ctx.fillStyle = '#64748b'; ctx.fillRect(0, 1250, W, H - 1250); ctx.fillStyle = '#fff'; for (let i = 0; i < 8; i++) ctx.fillRect(i * 150, 1380, 90, 10);
-  [[130, 0], [330, 4], [560, 9], [920, 7]].forEach(([x, id], i) => {
-    castMember(id, x, 1110, .9, { pose: 'phoneUp', face: 'happy', t, bob: i, shadow: false });
-    for (let k = 0; k < 4; k++) { const q = (t * 1.2 + k / 4 + i * .3) % 1; ctx.save(); ctx.globalAlpha = 1 - q; ctx.translate(x + 30 + Math.sin(k * 2 + i) * 50, 900 - q * 240); rr(-60, -20, 120, 40, 20); ctx.fillStyle = '#ef4444'; ctx.fill(); ctx.fillStyle = '#fff'; font(800, 22); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🔔 +' + (999 - k * 111 - i * 77), 0, 1); ctx.restore(); }
-  });
-  const bx = ((t - TL.geri[0]) * 160) % 1400 - 200;
-  bike(bx, 1240, 1.0, t);
-  human(bx, 1140, 1.0, { shirt: '#10b981', hair: '#5a3825', hairStyle: 'short', face: 'happy', skin: '#f1c27d', t, shadow: false });
-  credit('Yorumlardan: @umut.tekinkus 🚲', 680, vis(t, TL.geri[0] + 1.5, TL.geri[1], .25, .2));
-  stampHit(540, 560, '📶 İNTERNET GELDİ!', '#16a34a', (t - TL.geri[0] - 1.2) / .3);
+  const g0 = TL.geri[0], skorAt = TL.skorAc || g0 + 1.2, champ = TL.sampiyon || g0 + 2.8;
+  if (t < skorAt) { const p = clamp((t - g0) / (skorAt - g0)); spaceBack(t); brightGlobe(540, 900, lerp(420, 600, p), 20 + t * 6, p); stampHit(540, 560, '📶 İNTERNET GELDİ!', '#16a34a', (t - g0 - .3) / .3); return; }
+  if (t < champ) {
+    const wg = ctx.createLinearGradient(0, 0, 0, H); wg.addColorStop(0, '#5e3b2c'); wg.addColorStop(1, '#3b2418'); ctx.fillStyle = wg; ctx.fillRect(0, 0, W, H);
+    const open = t > skorAt + .5;
+    castMember(0, 140, 1300, 1.05, { pose: 'phoneUp', face: open ? 'shout' : 'shock', t, shadow: false });
+    human(940, 1300, 1.1, { shirt: TR_RED, pants: '#fff', hair: '#111', hairStyle: 'short', face: open ? 'shout' : 'shock', pose: 'phoneUp', skin: '#e9b48a', t, shadow: false });
+    scorePhone(540, 820, 1.1, t, open);
+    credit('Yorumlardan: @umutbaran0643', 1250, vis(t, skorAt + .2, champ + .2, .2, .2));
+    return;
+  }
+  celebrate(t);
+  credit('Yorumlardan: @umut.tekinkus 🚲', 1250, vis(t, champ + .6, TL.geri[1] + .2, .2, .2));
 }
 
 // ---------- 5. auntie's first message ----------
@@ -205,7 +244,12 @@ function render(t) {
     font(900, 40); ctx.fillStyle = '#e63946'; ctx.fillText('🔴 KIRMIZI', -150, 42); ctx.fillStyle = '#111'; ctx.fillText('mı', 0, 42); ctx.fillStyle = '#2563eb'; ctx.fillText('MAVİ 🔵', 150, 42);
     ctx.restore();
   }
-  if (inR(TL.geri)) { sceneSlide(t, TL.geri[0], () => geriScene(t)); }
+  if (inR(TL.geri)) {
+    sceneSlide(t, TL.geri[0], () => geriScene(t));
+    const sk = TL.skorAc || TL.geri[0] + 1.2, ch = TL.sampiyon || TL.geri[0] + 2.8;
+    if (t >= sk && t < ch) title([['SKOR SİTELERİ', 76, '#fff'], ['SONUNDA AÇILDI 📲', 76, '#fde047']], sk + .05, ch, t, 350);
+    if (t >= ch) title([['TÜRKİYE', 96, '#fff'], ['DÜNYA ŞAMPİYONU 🏆', 78, '#fde047']], ch, TL.geri[1], t, 330);
+  }
   if (inR(TL.teyze)) { sceneSlide(t, TL.teyze[0], () => teyzeScene(t)); title([['TEYZENİN', 76, '#fff'], ['İLK MESAJI 🌸', 92, '#be185d']], TL.teyze[0] + .1, TL.teyze[1], t, 350); sendPrompt('Aile grubuna gönder', 1560, vis(t, TL.teyze[0] + 1, TL.teyze[1] + .2, .25, .2)); }
   if (inR(TL.anne)) { sceneSlide(t, TL.anne[0], () => anneScene(t)); title([['KAHRAMAN', 84, '#fff'], ['EVE DÖNDÜ 🚀', 92, '#ffd166']], TL.anne[0] + .1, TL.ekmek, t, 330); }
   if (t >= TL.fin[0] - .05) {
