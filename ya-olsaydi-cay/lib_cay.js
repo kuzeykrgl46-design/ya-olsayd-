@@ -135,7 +135,8 @@ function person(x, y, s, o = {}) {
     ctx.fillStyle = shade(lower, .06); rr(-48, -6, 46, 52, 18); ctx.fill(); rr(2, -6, 46, 52, 18); ctx.fill();
     ctx.fillStyle = lower; rr(-44, 34, 36, 124, 14); ctx.fill(); rr(8, 34, 36, 124, 14); ctx.fill();
     ctx.fillStyle = shade(lower, -.2); ctx.fillRect(-28, 44, 4, 100); ctx.fillRect(24, 44, 4, 100);
-    if (o.dress) { ctx.fillStyle = o.dress; ctx.beginPath(); ctx.moveTo(-50, -6); ctx.lineTo(50, -6); ctx.lineTo(60, 130); ctx.lineTo(-60, 130); ctx.fill(); }
+    ctx.fillStyle = shade(lower, .14); ctx.beginPath(); ctx.ellipse(-25, 36, 27, 19, 0, 0, 7); ctx.ellipse(25, 36, 27, 19, 0, 0, 7); ctx.fill(); // knees toward camera
+    if (o.dress) { ctx.fillStyle = o.dress; ctx.beginPath(); ctx.moveTo(-50, -6); ctx.lineTo(50, -6); ctx.lineTo(62, 60); ctx.quadraticCurveTo(0, 74, -62, 60); ctx.fill(); }
     ctx.fillStyle = shoes; ctx.beginPath(); ctx.ellipse(-26, footY, 24, 10, 0, 0, 7); ctx.ellipse(26, footY, 24, 10, 0, 0, 7); ctx.fill();
   } else {
     ctx.fillStyle = pants; rr(-42, 0, 38, 166, 14); ctx.fill(); rr(4, 0, 38, 166, 14); ctx.fill();
