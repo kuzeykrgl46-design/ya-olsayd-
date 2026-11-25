@@ -105,7 +105,15 @@ function personHead(o) {
   if (mustache) { ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(-17, 26); ctx.quadraticCurveTo(-10, 17, 0, 20); ctx.quadraticCurveTo(10, 17, 17, 26); ctx.quadraticCurveTo(8, 23, 0, 25); ctx.quadraticCurveTo(-8, 23, -17, 26); ctx.fill(); }
   // mouth
   ctx.fillStyle = '#5c1a1a'; ctx.strokeStyle = '#5c1a1a'; ctx.lineWidth = 2.6; const my = 30 + (mustache ? 1 : 0);
-  if (face === 'shock') { ctx.beginPath(); ctx.ellipse(0, my + 2, 7, 10, 0, 0, 7); ctx.fill(); }
+  const talk = o.talk || 0;
+  if (talk > .04) { // speaking: open mouth follows the syllables
+    const mw = 10 + talk * 3, mh = 2 + talk * 13;
+    ctx.beginPath(); ctx.ellipse(0, my + 2, mw, mh, 0, 0, 7); ctx.fill();
+    ctx.save(); ctx.beginPath(); ctx.ellipse(0, my + 2, mw, mh, 0, 0, 7); ctx.clip();
+    ctx.fillStyle = '#fff'; ctx.fillRect(-mw, my + 2 - mh, mw * 2, Math.min(5, mh * .45));
+    ctx.fillStyle = '#e76f6f'; ctx.beginPath(); ctx.ellipse(0, my + 2 + mh, mw * .7, mh * .55, 0, 0, 7); ctx.fill(); ctx.restore();
+  }
+  else if (face === 'shock') { ctx.beginPath(); ctx.ellipse(0, my + 2, 7, 10, 0, 0, 7); ctx.fill(); }
   else if (face === 'shout') { ctx.beginPath(); ctx.ellipse(0, my + 2, 13, 11, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(-9, my - 8, 18, 4); }
   else if (face === 'happy') { ctx.beginPath(); ctx.moveTo(-13, my - 3); ctx.quadraticCurveTo(0, my + 13, 13, my - 3); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(-9, my - 3, 18, 3.5); }
   else if (face === 'angry' || face === 'sad' || face === 'cry') { ctx.beginPath(); ctx.moveTo(-11, my + 4); ctx.quadraticCurveTo(0, my - 5, 11, my + 4); ctx.stroke(); if (face === 'cry') { ctx.beginPath(); ctx.ellipse(0, my + 1, 8, 4, 0, 0, 7); ctx.fill(); } }
@@ -223,4 +231,13 @@ function teaBagPack(x, y, w, h, rot = 0, label = 'TAZE RİZE') {
   ctx.save(); ctx.translate(0, h * .22); ctx.rotate(-.06); ctx.fillStyle = '#fefce8'; rr(-w * .38, -9, w * .76, 18, 3); ctx.fill();
   ctx.fillStyle = TEA; ctx.font = `900 ${Math.max(8, w * .13)}px Inter`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, 0, 1); ctx.restore();
   ctx.restore();
+}
+
+// mouth openness for a spoken line between a and b (syllable rhythm with short word pauses); replaced by word timings after the voiceover
+function talkAt(t, a, b, rate = 6.2) {
+  if (t < a || t > b) return 0;
+  const u = (t - a) * rate, syl = Math.floor(u), ph = u - syl;
+  if (rnd(syl * 13 + Math.floor(a * 10)) < .16) return 0; // little pause between words
+  const fade = clamp((t - a) / .08) * clamp((b - t) / .08);
+  return Math.sin(ph * Math.PI) * (.55 + .45 * rnd(syl * 7 + 3)) * fade;
 }
