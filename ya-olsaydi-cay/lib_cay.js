@@ -249,3 +249,13 @@ function talkAt(t, a, b, rate = 6.2) {
 
 // a short open-mouth surprise, then the mouth closes and the eyes stay wide
 function surprised(t, at) { return t < at + .7 ? 'shock' : 'stunned'; }
+
+// lip sync from the voiceover's word timestamps (TL.talk[who] = [[start, end, word], ...]); falls back to talkAt(a, b)
+function say(t, who, a, b) {
+  const L = window.TL && TL.talk && TL.talk[who]; if (!L) return talkAt(t, a, b);
+  if (t < L[0][0] - .05 || t > L[L.length - 1][1] + .05) return null;
+  const w = L.find(w => t >= w[0] && t <= w[1]); if (!w) return 0.0;
+  const syl = Math.max(1, (w[2].match(/[aeıioöuüAEIİOÖUÜ]/g) || []).length), u = (t - w[0]) / (w[1] - w[0]) * syl, k = Math.floor(u);
+  return Math.sin((u - k) * Math.PI) * (.6 + .4 * rnd(k * 7 + w[0] * 10));
+}
+function sayStart(who, fb) { const L = window.TL && TL.talk && TL.talk[who]; return L ? L[0][0] : fb; }

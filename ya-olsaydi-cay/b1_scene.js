@@ -120,7 +120,7 @@ function babaScene(t) {
   blurred(10, () => { kitchenBack(t); });
   shot(t, r, 1.0, 1.12, 540, 960, 540, 900, () => {
     const shake = t > r[0] + .4 ? Math.sin(t * 40) * 2 : 0;
-    const hands = person(540 + shake, hy, s, { ...DAD, seated: true, face: surprised(t, r[0]), talk: talkAt(t, r[0] + .5, r[0] + 2.1), t, shadow: false, look: .7,
+    const hands = person(540 + shake, hy, s, { ...DAD, seated: true, face: surprised(t, r[0]), talk: say(t, 'baba', r[0] + .5, r[0] + 2.1), t, shadow: false, look: .7,
       handsW: [[300, 1020], [800, 1160]], handShape: ['fist', 'fist'] }).hands;
     // fork with a slice of cheese (left hand)
     const [fx, fy] = hands[0];
@@ -135,7 +135,7 @@ function babaScene(t) {
     breakfastS(540, 1600, 1.1, t);
   });
   sunRays(900, 200, t, undefined, .15);
-  speech(380, 600, 'Peynir çaysız inmez ki!', vis(t, r[0] + .5, r[1] + .3, .2, .2));
+  speech(380, 600, 'Peynir çaysız inmez ki!', vis(t, sayStart('baba', r[0] + .5) - .3, r[1] + .3, .2, .2));
 }
 
 // ---------- 3. breaking news: the anchor cries live ----------
@@ -146,7 +146,7 @@ function haberScene(t) {
     for (let i = 0; i < 3; i++) { const x = 120 + i * 300; ctx.fillStyle = '#0f172a'; rr(x, 330, 260, 170, 10); ctx.fill(); ctx.fillStyle = i === 1 ? TEA : '#1d4ed8'; rr(x + 10, 340, 240, 150, 6); ctx.fill(); ctx.fillStyle = '#fff'; font(900, 26); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(i === 1 ? '☕ ❌' : 'CANLI', x + 130, 415); }
     glow(540, 700, 500, 'rgba(96,165,250,A)', .25);
     const wipe = Math.sin(t * 5) * 6;
-    const hands = person(540, hy, s, { shirt: '#f8fafc', jacket: '#1e293b', tie: TEA, hair: '#2b1d14', hairStyle: 'side', face: 'cry', talk: talkAt(t, r[0] + 3.0, r[0] + 4.6, 5), skin: '#e9b48a', seated: true, t, shadow: false,
+    const hands = person(540, hy, s, { shirt: '#f8fafc', jacket: '#1e293b', tie: TEA, hair: '#2b1d14', hairStyle: 'side', face: 'cry', talk: say(t, 'spiker', r[0] + 3.0, r[0] + 4.6), skin: '#e9b48a', seated: true, t, shadow: false,
       handsOverFace: true, handsW: [[490 + wipe, 790], [720, 1050]], handShape: ['fist', 'open'] }).hands;
     for (let i = 0; i < 3; i++) { const p = (t * 1.2 + i * .33) % 1; ctx.fillStyle = `rgba(147,197,253,${1 - p})`; ctx.beginPath(); ctx.ellipse(i === 1 ? 590 : 495, 775 + p * 110, 7, 11, 0, 0, 7); ctx.fill(); }
     ctx.fillStyle = '#fff'; ctx.save(); ctx.translate(hands[0][0] - 6, hands[0][1] - 18); ctx.rotate(-.3); rr(-26, -22, 52, 44, 8); ctx.fill(); ctx.restore(); // tissue
@@ -161,7 +161,7 @@ function haberScene(t) {
   ctx.fillStyle = '#111'; ctx.fillRect(0, 1270, W, 50); ctx.fillStyle = '#fde047'; font(800, 30);
   const tick = 'Ülkede çay alarmı · Kahvaltılar iptal · Misafirlere su ikram ediliyor · Uzmanlar sakin olun diyor · '; const tw = ctx.measureText(tick).width; const off = (t * 220) % tw;
   ctx.fillText(tick + tick, -off, 1296);
-  speech(330, 560, 'Sevgili seyirciler… çay… BİTTİ! 😭', vis(t, r[0] + 2.9, r[1] + .3, .2, .2));
+  speech(330, 560, 'Sevgili seyirciler… çay… BİTTİ! 😭', vis(t, sayStart('spiker', r[0] + 3.0) - .3, r[1] + .3, .2, .2));
   grain(t, .05);
 }
 
@@ -200,7 +200,7 @@ function sofaFront(x0, w, y, col = '#7f1d1d') { // armrests + base (drawn after 
 }
 function kizScene(t) {
   if (t > TL.kiz[0] + 2.2) sendPrompt('Annene gönder', 1440, vis(t, TL.kiz[0] + 2.2, TL.kiz[1], .25, .2));
-  const r = TL.kiz, zoomAt = r[0] + 1.6, HY = 1230, s = 1.95, SY = HY - 26; // SY: hips resting on the seat
+  const r = TL.kiz, zoomAt = TL.kizZoom || r[0] + 1.6, HY = 1230, s = 1.95, SY = HY - 26; // SY: hips resting on the seat
   const zp = clamp((t - zoomAt) / .25), z = t < zoomAt ? lerp(1.0, 1.06, clamp((t - r[0]) / 1.6)) : lerp(1.06, 1.6, easeOut(zp));
   const fx = t < zoomAt ? 540 : lerp(540, 860, zp), fy = t < zoomAt ? 980 : lerp(980, 880, zp);
   ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-fx, -fy - 120); // lifted so the laps clear the subtitles
@@ -310,12 +310,12 @@ function karaScene(t) {
     person(250, HY + 40, 1.8, { shirt: '#334155', hair: '#111', hairStyle: 'short', stubble: true, face: surprised(t, r[0] + .7), skin: '#e9b48a', t, shadow: true, look: 1, pose: 'down', hands: [[-62, 10], [60, -40]] });
     // seller opens his trench coat: clear zip bags of loose tea
     const open = easeOut(clamp((t - r[0] - .6) / .5)), inner = 4 + open * 58;
-    person(640, HY, s, { shirt: '#1f2937', pants: '#111', coat: '#5b4630', coatOpen: open, hat: 'fedora', sunglasses: true, stubble: true, mustache: true, hair: '#1c1917', hairStyle: 'short', face: 'sly', talk: talkAt(t, r[0] + .9, r[0] + 2.6), skin: '#d9a37a', t, bob: 1, shadow: true,
+    person(640, HY, s, { shirt: '#1f2937', pants: '#111', coat: '#5b4630', coatOpen: open, hat: 'fedora', sunglasses: true, stubble: true, mustache: true, hair: '#1c1917', hairStyle: 'short', face: 'sly', talk: say(t, 'kara', r[0] + .9, r[0] + 2.6), skin: '#d9a37a', t, bob: 1, shadow: true,
       hands: [[-inner - 6, -78], [inner + 6, -78]], handShape: ['fist', 'fist'],
       lining: op => { for (let i = 0; i < 6; i++) { const c = i % 2 ? 1 : -1, row = Math.floor(i / 2); teaBagPack(c * 30, -50 + row * 62, 46, 56, (rnd(i) - .5) * .2, 'RİZE'); } } });
     for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(148,163,184,.08)'; ctx.beginPath(); ctx.ellipse((i * 260 + t * 30) % 1400 - 200, 1440 + (i % 2) * 40, 300, 60, 0, 0, 7); ctx.fill(); }
   });
-  speech(760, 640, 'Abi taze Rize var, gel bak!', vis(t, r[0] + .9, r[1] + .3, .2, .2));
+  speech(760, 640, 'Abi taze Rize var, gel bak!', vis(t, sayStart('kara', r[0] + .9) - .3, r[1] + .3, .2, .2));
   spot(620, 1000, 680, .65); grain(t, .08);
 }
 
