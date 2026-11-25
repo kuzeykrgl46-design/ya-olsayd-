@@ -69,57 +69,94 @@ function breakfast(x, y, t) { // plates on the table
 }
 function tray(x, y, s, glasses = 0) { ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.fillStyle = '#c0a062'; ctx.beginPath(); ctx.ellipse(0, 0, 120, 30, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#8b6d2f'; ctx.lineWidth = 6; ctx.stroke(); for (let i = 0; i < glasses; i++) teaGlass(-60 + i * 60, -40, .5, .85, false); ctx.restore(); }
 
+// ---------- shared sets ----------
+function kitchenBack(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#fde68a'); g.addColorStop(1, '#f59e0b'); ctx.fillStyle = g; ctx.fillRect(-300, -300, W + 600, H + 600);
+  ctx.fillStyle = '#fbbf24'; ctx.fillRect(-300, 1150, W + 600, 30); // wall rail
+  ctx.fillStyle = '#fff7d6'; rr(640, 300, 340, 430, 20); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 18; ctx.strokeRect(640, 300, 340, 430); ctx.beginPath(); ctx.moveTo(810, 300); ctx.lineTo(810, 730); ctx.moveTo(640, 515); ctx.lineTo(980, 515); ctx.stroke();
+  ctx.fillStyle = '#16a34a'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(700 + i * 16, 700 - (i % 2) * 18, 10, 26, (i - 2) * .3, 0, 7); ctx.fill(); } ctx.fillStyle = '#c2410c'; rr(680, 700, 70, 40, 8); ctx.fill(); // pot plant
+  ctx.fillStyle = '#92400e'; ctx.fillRect(-300, 1600, W + 600, 600); // floor
+}
+// small family table: top surface at y, checkered cloth hanging below
+function familyTable(x, y, w, t) {
+  ctx.fillStyle = '#5b3a1e'; ctx.fillRect(x - w / 2 + 30, y + 140, 22, 220); ctx.fillRect(x + w / 2 - 52, y + 140, 22, 220);
+  const tg = ctx.createLinearGradient(0, y - 60, 0, y); tg.addColorStop(0, '#fff'); tg.addColorStop(1, '#f1f5f9');
+  ctx.fillStyle = tg; ctx.beginPath(); ctx.moveTo(x - w / 2 + 40, y - 70); ctx.lineTo(x + w / 2 - 40, y - 70); ctx.lineTo(x + w / 2, y); ctx.lineTo(x - w / 2, y); ctx.closePath(); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.lineTo(x + w / 2, y); ctx.lineTo(x + w / 2 + 10, y + 150); ctx.lineTo(x - w / 2 - 10, y + 150); ctx.closePath(); ctx.clip();
+  ctx.fillStyle = '#fff'; ctx.fillRect(x - w / 2 - 10, y, w + 20, 150); ctx.fillStyle = 'rgba(220,38,38,.75)';
+  for (let i = 0; i < 16; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2 === 0) ctx.fillRect(x - w / 2 - 10 + i * 46, y + j * 38, 46, 38);
+  ctx.restore();
+  ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(x - w / 2, y, w, 8);
+}
+function breakfastS(x, y, s, t) { ctx.save(); ctx.translate(x, y); ctx.scale(s, s); breakfast(0, 0, t); ctx.restore(); }
+function emptyGlass(x, y, s) { teaGlass(x, y, s, 0, true); }
+
 // ---------- 1. sunny breakfast, empty teapot ----------
+const DAD = { shirt: '#457b9d', pants: '#343a40', hair: '#4b4b4b', hairStyle: 'side', mustache: true, skin: '#e0a47a', rolled: true };
 function kahvaltiScene(t) {
-  const r = TL.kahvalti;
-  shot(t, r, 1.0, 1.35, 540, 960, 600, 860, () => {
-    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#fde68a'); g.addColorStop(1, '#f59e0b'); ctx.fillStyle = g; ctx.fillRect(-200, -200, W + 400, H + 400);
-    // window with morning light
-    ctx.fillStyle = '#fff7d6'; rr(620, 260, 360, 460, 20); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 18; ctx.strokeRect(620, 260, 360, 460); ctx.beginPath(); ctx.moveTo(800, 260); ctx.lineTo(800, 720); ctx.moveTo(620, 490); ctx.lineTo(980, 490); ctx.stroke();
-    // table
-    const tg = ctx.createLinearGradient(0, 1000, 0, 1500); tg.addColorStop(0, '#fff'); tg.addColorStop(1, '#e5e7eb'); ctx.fillStyle = tg; ctx.beginPath(); ctx.moveTo(-200, 1500); ctx.lineTo(80, 1000); ctx.lineTo(1000, 1000); ctx.lineTo(1280, 1500); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ef444455'; for (let i = 0; i < 8; i++) ctx.fillRect(80 + i * 120, 1000, 50, 500);
-    breakfast(540, 1250, t);
-    // dad behind, hand on the lid
-    human(300, 1000, 1.6, { shirt: '#457b9d', pants: '#343a40', hair: '#555', hairStyle: 'short', mustache: true, face: t > r[0] + 1.6 ? 'shock' : 'happy', skin: '#e0a47a', t, shadow: false });
+  const r = TL.kahvalti, TY = 1300;
+  shot(t, r, 1.0, 1.22, 540, 960, 560, 900, () => {
+    kitchenBack(t);
+    chairBack(330, TY - 40, 2.0); chairBack(800, TY - 40, 1.7, '#8a5530');
     const lid = clamp((t - r[0] - .8) / .6);
-    caydanlik(620, 1010, 1.1, lid, t);
+    // dad reaches to the teapot lid, daughter waits with her glass
+    person(330, TY - 40, 2.0, { ...DAD, seated: true, face: t > r[0] + 1.6 ? 'shock' : 'happy', look: .6, t, shadow: false,
+      handsW: [[250, TY - 60], [560 + lid * 10, TY - 250 - lid * 40]], handShape: ['open', 'fist'] });
+    person(800, TY - 40, 1.7, { shirt: '#f472b6', hair: '#6b3e26', hairStyle: 'bun', female: true, skin: '#f1c5a0', seated: true, face: t > r[0] + 1.6 ? 'shock' : 'happy', look: -.5, t, bob: 2, shadow: false,
+      handsW: [[730, TY - 60], [880, TY - 60]] });
+    familyTable(540, TY, 900, t);
+    breakfastS(500, TY - 30, .62, t);
+    caydanlik(600, TY - 50 - 160 * .62, .62, lid, t);
+    teaGlass(200, TY - 60, .55, 0, true); teaGlass(890, TY - 60, .5, 0, true);
   });
-  sunRays(880, 260, t); dust(t, 40);
-  if (t > r[0] + 1.4) { const p = clamp((t - r[0] - 1.4) / .25); stampBig(540, 600, 'ÇAYDANLIK BOŞ! ☕', TEA, p); }
+  sunRays(880, 300, t); dust(t, 40);
+  if (t > r[0] + 1.4) { const p = clamp((t - r[0] - 1.4) / .25); stampBig(540, 640, 'ÇAYDANLIK BOŞ! ☕', TEA, p); }
 }
 function stampBig(x, y, text, col, p) { stampHit(x, y, text, col, p); }
 
-// ---------- 2. dad frozen with an empty glass (close-up, background blurred) ----------
+// ---------- 2. dad frozen: cheese on the fork, empty glass in hand ----------
 function babaScene(t) {
-  const r = TL.baba;
-  blurred(8, () => { const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#fde68a'); g.addColorStop(1, '#d97706'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.fillStyle = '#fff7d6'; rr(640, 300, 360, 460, 20); ctx.fill(); breakfast(540, 1500, t); });
-  shot(t, r, 1.0, 1.18, 540, 900, 540, 820, () => {
-    human(540, 1350, 3.4, { shirt: '#457b9d', pants: '#343a40', hair: '#555', hairStyle: 'short', mustache: true, face: 'shock', skin: '#e0a47a', t, shadow: false });
-    teaGlass(800, 1000, 2.2, 0, false);
+  const r = TL.baba, hy = 1430, s = 3.3;
+  blurred(10, () => { kitchenBack(t); });
+  shot(t, r, 1.0, 1.12, 540, 960, 540, 900, () => {
+    const shake = t > r[0] + .4 ? Math.sin(t * 40) * 2 : 0;
+    const hands = person(540 + shake, hy, s, { ...DAD, seated: true, face: 'shock', t, shadow: false, look: .7,
+      handsW: [[300, 1020], [800, 1160]], handShape: ['fist', 'fist'] }).hands;
+    // fork with a slice of cheese (left hand)
+    const [fx, fy] = hands[0];
+    ctx.save(); ctx.translate(fx, fy); ctx.rotate(-.35);
+    ctx.fillStyle = '#cbd5e1'; rr(-6, -170, 12, 180, 5); ctx.fill(); for (let i = 0; i < 4; i++) rr(-14 + i * 8, -230, 5, 64, 2), ctx.fill();
+    ctx.fillStyle = '#fefce8'; rr(-50, -290, 100, 62, 10); ctx.fill(); ctx.fillStyle = '#fde68a'; ctx.beginPath(); ctx.arc(-20, -262, 7, 0, 7); ctx.arc(18, -270, 5, 0, 7); ctx.fill();
+    ctx.restore();
+    // empty glass (right hand)
+    const [gx, gy] = hands[1]; teaGlass(gx + 10, gy - 30, 1.5, 0, false);
+    // table edge in front
+    const tg = ctx.createLinearGradient(0, 1500, 0, 1700); tg.addColorStop(0, '#fff'); tg.addColorStop(1, '#e2e8f0'); ctx.fillStyle = tg; ctx.fillRect(-200, 1540, W + 400, 600);
+    breakfastS(540, 1600, 1.1, t);
   });
   sunRays(900, 200, t, undefined, .15);
-  speech(380, 640, 'Peynir çaysız inmez ki!', vis(t, r[0] + .5, r[1] + .3, .2, .2));
+  speech(380, 600, 'Peynir çaysız inmez ki!', vis(t, r[0] + .5, r[1] + .3, .2, .2));
 }
 
 // ---------- 3. breaking news: the anchor cries live ----------
 function haberScene(t) {
-  const r = TL.haber;
+  const r = TL.haber, s = 2.6, hy = 1250;
   shot(t, r, 1.12, 1.0, 540, 900, 540, 960, () => {
     const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0b1d3a'); g.addColorStop(1, '#1e3a8a'); ctx.fillStyle = g; ctx.fillRect(-100, -100, W + 200, H + 200);
-    // studio screens
-    for (let i = 0; i < 3; i++) { const x = 120 + i * 300; ctx.fillStyle = '#0f172a'; rr(x, 380, 260, 170, 10); ctx.fill(); ctx.fillStyle = i === 1 ? TEA : '#1d4ed8'; rr(x + 10, 390, 240, 150, 6); ctx.fill(); ctx.fillStyle = '#fff'; font(900, 26); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(i === 1 ? '☕ ❌' : 'CANLI', x + 130, 465); }
+    for (let i = 0; i < 3; i++) { const x = 120 + i * 300; ctx.fillStyle = '#0f172a'; rr(x, 330, 260, 170, 10); ctx.fill(); ctx.fillStyle = i === 1 ? TEA : '#1d4ed8'; rr(x + 10, 340, 240, 150, 6); ctx.fill(); ctx.fillStyle = '#fff'; font(900, 26); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(i === 1 ? '☕ ❌' : 'CANLI', x + 130, 415); }
     glow(540, 700, 500, 'rgba(96,165,250,A)', .25);
-    // anchor
-    human(540, 1060, 3.0, { shirt: '#111827', pants: '#111827', hair: '#2b1d14', hairStyle: 'short', face: 'shock', skin: '#e9b48a', t, shadow: false });
-    for (let i = 0; i < 2; i++) { const p = (t * 1.3 + i * .5) % 1; ctx.fillStyle = `rgba(147,197,253,${1 - p})`; ctx.beginPath(); ctx.ellipse(505 + i * 70, 830 + p * 90, 9, 14, 0, 0, 7); ctx.fill(); } // tears
-    // tissue in hand
-    ctx.fillStyle = '#fff'; ctx.save(); ctx.translate(430 + Math.sin(t * 6) * 10, 900); ctx.rotate(-.3); rr(-30, -24, 60, 48, 8); ctx.fill(); ctx.restore();
-    // desk
-    const dg = ctx.createLinearGradient(0, 1080, 0, 1300); dg.addColorStop(0, '#334155'); dg.addColorStop(1, '#0f172a'); ctx.fillStyle = dg; rr(80, 980, 920, 200, 30); ctx.fill();
-    ctx.fillStyle = GOLD; font(900, 44); ctx.textAlign = 'center'; ctx.fillText('HABER 24', 540, 1080);
+    const wipe = Math.sin(t * 5) * 6;
+    const hands = person(540, hy, s, { shirt: '#f8fafc', jacket: '#1e293b', tie: TEA, hair: '#2b1d14', hairStyle: 'side', face: 'cry', skin: '#e9b48a', seated: true, t, shadow: false,
+      handsOverFace: true, handsW: [[490 + wipe, 790], [720, 1050]], handShape: ['fist', 'open'] }).hands;
+    for (let i = 0; i < 3; i++) { const p = (t * 1.2 + i * .33) % 1; ctx.fillStyle = `rgba(147,197,253,${1 - p})`; ctx.beginPath(); ctx.ellipse(i === 1 ? 590 : 495, 775 + p * 110, 7, 11, 0, 0, 7); ctx.fill(); }
+    ctx.fillStyle = '#fff'; ctx.save(); ctx.translate(hands[0][0] - 6, hands[0][1] - 18); ctx.rotate(-.3); rr(-26, -22, 52, 44, 8); ctx.fill(); ctx.restore(); // tissue
+    // compact news desk
+    const dg = ctx.createLinearGradient(0, 1040, 0, 1180); dg.addColorStop(0, '#334155'); dg.addColorStop(1, '#0f172a'); ctx.fillStyle = dg;
+    ctx.fillRect(170, 1040, 740, 1000); ctx.fillStyle = '#0f172a'; ctx.fillRect(-200, 1180, W + 400, 1000);
+    ctx.fillStyle = '#475569'; ctx.fillRect(170, 1030, 740, 16);
+    ctx.fillStyle = GOLD; font(900, 40); ctx.textAlign = 'center'; ctx.fillText('HABER 24', 540, 1088);
+    ctx.fillStyle = '#e2e8f0'; rr(640, 1012, 120, 20, 4); ctx.fill(); // papers
   });
-  // lower third + ticker
   ctx.fillStyle = TEA; ctx.fillRect(0, 1180, W, 90); ctx.fillStyle = '#fff'; font(900, 50); ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('🔴 SON DAKİKA: ÇAY BİTTİ', 40, 1226);
   ctx.fillStyle = '#111'; ctx.fillRect(0, 1270, W, 50); ctx.fillStyle = '#fde047'; font(800, 30);
   const tick = 'Ülkede çay alarmı · Kahvaltılar iptal · Misafirlere su ikram ediliyor · Uzmanlar sakin olun diyor · '; const tw = ctx.measureText(tick).width; const off = (t * 220) % tw;
@@ -130,100 +167,97 @@ function haberScene(t) {
 // ---------- 4. "No tea, no bride!" ----------
 function kizScene(t) {
   if (t > TL.kiz[0] + 2.2) sendPrompt('Annene gönder', 1440, vis(t, TL.kiz[0] + 2.2, TL.kiz[1], .25, .2));
-  const r = TL.kiz, zoomAt = r[0] + 1.6;
-  const z = t < zoomAt ? 1.0 : lerp(1.0, 1.6, easeOut(clamp((t - zoomAt) / .25)));
-  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-(t < zoomAt ? 540 : lerp(540, 820, clamp((t - zoomAt) / .25))), -(t < zoomAt ? 960 : lerp(960, 900, clamp((t - zoomAt) / .25))));
-  // living room with lace curtains, sofas
-  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#fde2e4'); g.addColorStop(1, '#f8c4b4'); ctx.fillStyle = g; ctx.fillRect(-200, -200, W + 400, H + 400);
-  ctx.fillStyle = '#ffffffaa'; for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.ellipse(100 + i * 110, 520, 50, 200, 0, 0, 7); ctx.fill(); }
-  ctx.fillStyle = '#8b5e3c'; ctx.fillRect(0, 1260, W, H - 1260);
-  ctx.fillStyle = '#7f1d1d'; rr(40, 1060, 420, 180, 40); ctx.fill(); rr(620, 1060, 420, 180, 40); ctx.fill();
-  // groom's family on the left, waiting politely
-  human(140, 1110, 1.05, { shirt: '#1e3a8a', hair: '#111', hairStyle: 'short', face: 'calm', skin: '#e9b48a', t, shadow: false });
-  human(260, 1110, 1.05, { shirt: '#6d597a', skin: '#e9b48a', scarf: '#c77dff', face: 'happy', t, shadow: false });
-  human(370, 1110, 1.05, { shirt: '#111827', hair: '#bbb', hairStyle: 'grey', mustache: true, face: 'calm', skin: '#d9a37a', t, shadow: false });
-  // bride's father, arms crossed, stern
-  human(820, 1110, 1.3, { shirt: '#6b7280', hair: '#555', hairStyle: 'bald', mustache: true, face: 'angry', pose: 'hipsBack', skin: '#d9a37a', t, shadow: false });
-  // bride frozen with an empty tray
-  human(560, 1180, 1.25, { shirt: '#fbcfe8', hair: '#5a3825', hairStyle: 'long', face: 'shock', skin: '#f3c9a5', t, shadow: false });
-  tray(560, 1150, 1.0, 0);
+  const r = TL.kiz, zoomAt = r[0] + 1.6, HY = 1190, s = 1.55;
+  const zp = clamp((t - zoomAt) / .25), z = t < zoomAt ? 1.0 : lerp(1.0, 1.75, easeOut(zp));
+  const fx = t < zoomAt ? 540 : lerp(540, 870, zp), fy = t < zoomAt ? 960 : lerp(960, 900, zp);
+  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-fx, -fy);
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#fde2e4'); g.addColorStop(1, '#f8c4b4'); ctx.fillStyle = g; ctx.fillRect(-300, -300, W + 600, H + 600);
+  ctx.fillStyle = '#ffffffaa'; for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.ellipse(100 + i * 110, 480, 50, 190, 0, 0, 7); ctx.fill(); }
+  ctx.fillStyle = '#c08457'; rr(380, 640, 320, 200, 10); ctx.fill(); ctx.fillStyle = '#fef3c7'; rr(395, 655, 290, 170, 6); ctx.fill(); // framed picture
+  ctx.fillStyle = '#8b5e3c'; ctx.fillRect(-300, 1330, W + 600, H); ctx.fillStyle = '#b91c1c88'; ctx.beginPath(); ctx.ellipse(540, 1560, 480, 110, 0, 0, 7); ctx.fill(); // carpet
+  // sofa (left) and armchair (right)
+  const sofa = (x0, w) => { ctx.fillStyle = '#7f1d1d'; rr(x0, 1000, w, 220, 40); ctx.fill(); ctx.fillStyle = '#991b1b'; rr(x0 - 20, 1120, 50, 220, 20); ctx.fill(); rr(x0 + w - 30, 1120, 50, 220, 20); ctx.fill(); ctx.fillStyle = '#6b1717'; rr(x0, 1220, w, 120, 20); ctx.fill(); };
+  sofa(40, 470); sofa(700, 320);
+  person(170, HY, s, { shirt: '#f8fafc', jacket: '#1e3a8a', tie: '#94a3b8', hair: '#111', hairStyle: 'side', face: 'happy', skin: '#e9b48a', seated: true, t, shadow: false, pose: 'table', hands: [[-40, 0], [40, 0]] });
+  person(400, HY, s, { shirt: '#6d597a', dressTop: '#6d597a', dress: '#4c3b5a', skin: '#e9b48a', scarf: '#c77dff', female: true, face: t > zoomAt ? 'shock' : 'happy', seated: true, t, bob: 1, shadow: false, hands: [[-10, -4], [10, -4]] });
+  person(870, HY, s * 1.05, { shirt: '#9ca3af', vest: '#374151', hair: '#777', hairStyle: 'bald', mustache: true, old: true, face: t > zoomAt ? 'angry' : 'stern', pose: 'crossed', skin: '#d9a37a', seated: true, t, bob: 2, shadow: false, look: -.6 });
+  // bride standing with an empty tray
+  const sway = Math.sin(t * 3) * 3;
+  person(600, HY + 40, s, { dressTop: '#fbcfe8', dress: '#f9a8d4', hair: '#5a3825', hairStyle: 'long', female: true, face: 'shock', skin: '#f3c9a5', t, bob: 3, shadow: true, look: .8,
+    handsW: [[520 + sway, 1150], [680 + sway, 1150]], handShape: ['fist', 'fist'] });
+  ctx.save(); ctx.translate(600 + sway, 1140); ctx.fillStyle = '#c0a062'; ctx.beginPath(); ctx.ellipse(0, 0, 110, 26, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#8b6d2f'; ctx.lineWidth = 6; ctx.stroke(); ctx.restore();
+  [550, 600, 650].forEach(x => teaGlass(x + sway, 1112, .32, 0, false));
   ctx.restore();
-  if (t > zoomAt) { stampHit(540, 640, 'ÇAY YOKSA KIZ DA YOK!', TEA, (t - zoomAt - .1) / .3); }
-  // drama-zoom whoosh lines
+  if (t > zoomAt) stampHit(540, 640, 'ÇAY YOKSA KIZ DA YOK!', TEA, (t - zoomAt - .1) / .3);
   if (t > zoomAt && t < zoomAt + .35) { ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 6; for (let i = 0; i < 16; i++) { const a = i / 16 * 6.28; ctx.beginPath(); ctx.moveTo(540 + Math.cos(a) * 300, 900 + Math.sin(a) * 300); ctx.lineTo(540 + Math.cos(a) * 700, 900 + Math.sin(a) * 700); ctx.stroke(); } }
 }
 
-// ---------- 5. kahve: okey stopped, everyone stares at empty glasses ----------
+// ---------- 5. kahve: okey stopped, uncles stare at empty glasses ----------
 function kahveScene(t) {
-  const r = TL.kahve;
-  shot(t, r, 1.15, 1.0, 620, 1000, 480, 1000, () => {
-    const wg = ctx.createLinearGradient(0, 0, 0, H); wg.addColorStop(0, '#3b2418'); wg.addColorStop(1, '#1c110b'); ctx.fillStyle = wg; ctx.fillRect(-200, -200, W + 400, H + 400);
-    // hanging lamp cone
-    ctx.fillStyle = '#111'; ctx.fillRect(536, 300, 8, 260); ctx.fillStyle = '#d97706'; ctx.beginPath(); ctx.moveTo(470, 600); ctx.lineTo(610, 600); ctx.lineTo(560, 540); ctx.lineTo(520, 540); ctx.fill();
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createLinearGradient(0, 600, 0, 1300); lg.addColorStop(0, 'rgba(255,200,120,.35)'); lg.addColorStop(1, 'rgba(255,200,120,0)'); ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(470, 600); ctx.lineTo(610, 600); ctx.lineTo(900, 1300); ctx.lineTo(180, 1300); ctx.fill(); ctx.restore();
+  const r = TL.kahve, HY = 1290, s = 1.75;
+  shot(t, r, 1.12, 1.0, 600, 1000, 500, 1000, () => {
+    const wg = ctx.createLinearGradient(0, 0, 0, H); wg.addColorStop(0, '#3b2418'); wg.addColorStop(1, '#1c110b'); ctx.fillStyle = wg; ctx.fillRect(-300, -300, W + 600, H + 600);
+    ctx.fillStyle = '#2a1a10'; for (let i = 0; i < 6; i++) ctx.fillRect(-100 + i * 240, 0, 10, 1400); // wall panels
+    ctx.fillStyle = '#111'; ctx.fillRect(536, 0, 8, 470); ctx.fillStyle = '#d97706'; ctx.beginPath(); ctx.moveTo(460, 520); ctx.lineTo(620, 520); ctx.lineTo(565, 460); ctx.lineTo(515, 460); ctx.fill();
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createLinearGradient(0, 520, 0, 1400); lg.addColorStop(0, 'rgba(255,200,120,.35)'); lg.addColorStop(1, 'rgba(255,200,120,0)'); ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(460, 520); ctx.lineTo(620, 520); ctx.lineTo(980, 1400); ctx.lineTo(100, 1400); ctx.fill(); ctx.restore();
+    [[290, '#6b4f3a'], [540, '#7a5236'], [790, '#6b4f3a']].forEach(([x, c]) => chairBack(x, HY - 30, s, c));
     const D = [
-      { shirt: '#6f4e37', hair: '#d0d0d0', hairStyle: 'grey', mustache: true, cap: '#4a3b35', skin: '#d9a37a' },
-      { shirt: '#3d5a80', hair: '#888', hairStyle: 'short', beard: true, cap: '#2b2d42', skin: '#c68642' },
-      { shirt: '#495057', hair: '#bbb', hairStyle: 'bald', mustache: true, glasses: true, skin: '#e0a47a' },
+      { shirt: '#e7e5e4', vest: '#6f4e37', hair: '#d0d0d0', hairStyle: 'grey', mustache: true, hat: 'flatcap', hatColor: '#4a3b35', skin: '#d9a37a', old: true },
+      { shirt: '#3d5a80', hair: '#777', hairStyle: 'short', beard: true, skin: '#c68642', rolled: true },
+      { shirt: '#e2e8f0', vest: '#495057', hair: '#bbb', hairStyle: 'bald', mustache: true, glasses: true, skin: '#e0a47a', old: true },
     ];
-    human(330, 1130, 1.25, { ...D[0], face: 'shock', t, shadow: false }); human(540, 1090, 1.1, { ...D[1], face: 'shock', t, shadow: false }); human(750, 1130, 1.25, { ...D[2], face: 'shock', t, shadow: false });
-    ctx.fillStyle = '#2d6a4f'; rr(160, 1180, 760, 30, 8); ctx.fill(); ctx.fillStyle = '#7f5539'; rr(150, 1205, 780, 20, 6); ctx.fill();
-    for (let i = 0; i < 18; i++) { ctx.save(); ctx.translate(200 + rnd(i) * 680, 1170 + rnd(i + 4) * 20); ctx.rotate((rnd(i + 8) - .5) * 1.4); ctx.fillStyle = '#fffaf0'; rr(-10, -14, 20, 28, 3); ctx.fill(); ctx.fillStyle = ['#e63946', '#111', '#ffb703', '#3b82f6'][i % 4]; font(900, 12); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i % 13 + 1), 0, 0); ctx.restore(); }
-    [330, 540, 750].forEach(x => teaGlass(x, 1140, .6, 0));
+    const lift = easeOut(clamp((t - r[0] - .4) / .6));
+    person(290, HY - 30, s, { ...D[0], seated: true, face: 'sad', t, shadow: false, look: .5, handsW: [[230, HY - 70], [370, HY - 70]], handShape: ['open', 'fist'] });
+    const mid = person(540, HY - 30, s, { ...D[1], seated: true, face: 'shock', t, bob: 1, shadow: false, look: .9, handsW: [[470, HY - 70], [610 + lift * 30, HY - 70 - lift * 210]], handShape: ['open', 'fist'] }).hands;
+    person(790, HY - 30, s, { ...D[2], seated: true, face: 'shock', t, bob: 2, shadow: false, look: -.6, pose: 'handsHead' });
+    // small okey table
+    ctx.fillStyle = '#4a2f1d'; ctx.fillRect(250, HY + 40, 24, 260); ctx.fillRect(806, HY + 40, 24, 260);
+    ctx.fillStyle = '#2d6a4f'; ctx.beginPath(); ctx.moveTo(250, HY - 80); ctx.lineTo(830, HY - 80); ctx.lineTo(880, HY); ctx.lineTo(200, HY); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#7f5539'; rr(190, HY - 4, 700, 46, 8); ctx.fill();
+    for (let i = 0; i < 18; i++) { ctx.save(); ctx.translate(250 + rnd(i) * 580, HY - 66 + rnd(i + 4) * 50); ctx.rotate((rnd(i + 8) - .5) * 1.4); ctx.fillStyle = '#fffaf0'; rr(-10, -14, 20, 28, 3); ctx.fill(); ctx.fillStyle = ['#e63946', '#111', '#ffb703', '#3b82f6'][i % 4]; font(900, 12); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i % 13 + 1), 0, 0); ctx.restore(); }
+    teaGlass(330, HY - 50, .42, 0); teaGlass(750, HY - 50, .42, 0);
+    teaGlass(mid[1][0] + 4, mid[1][1] - 26, .55, 0, false); // the empty glass he lifts to the light
   });
-  spot(540, 900, 700, .6); dust(t, 30, '255,200,120'); grain(t, .06);
+  spot(540, 900, 720, .6); dust(t, 30, '255,200,120'); grain(t, .06);
 }
 
 // ---------- 6. black market: "Abi taze Rize var" ----------
 function karaScene(t) {
-  const r = TL.kara;
-  shot(t, r, 1.0, 1.25, 540, 960, 600, 920, () => {
-    ctx.fillStyle = '#0b1020'; ctx.fillRect(-200, -200, W + 400, H + 400);
-    ctx.fillStyle = '#1f2937'; ctx.fillRect(-100, 300, 380, 1100); ctx.fillRect(820, 260, 400, 1140);
-    for (let r2 = 0; r2 < 6; r2++) { ctx.fillStyle = rnd(r2) > .5 ? '#fbbf2455' : '#11182788'; ctx.fillRect(40, 360 + r2 * 150, 70, 90); ctx.fillRect(900, 340 + r2 * 150, 70, 90); }
-    ctx.fillStyle = '#111827'; ctx.fillRect(0, 1300, W, H - 1300);
-    // streetlamp cone
-    ctx.fillStyle = '#374151'; ctx.fillRect(700, 500, 14, 800); ctx.fillStyle = '#fde68a'; ctx.beginPath(); ctx.ellipse(680, 500, 46, 14, 0, 0, 7); ctx.fill();
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createLinearGradient(0, 500, 0, 1320); lg.addColorStop(0, 'rgba(253,230,138,.45)'); lg.addColorStop(1, 'rgba(253,230,138,.02)'); ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(640, 505); ctx.lineTo(720, 505); ctx.lineTo(960, 1320); ctx.lineTo(380, 1320); ctx.fill(); ctx.restore();
-    // seller in a trench coat, opening it: lined with tea packets
-    const open = easeOut(clamp((t - r[0] - .6) / .5));
-    ctx.save(); ctx.translate(620, 1100);
-    ctx.fillStyle = '#111'; ctx.fillRect(-40, 60, 30, 140); ctx.fillRect(10, 60, 30, 140);
-    ctx.fillStyle = '#a16207'; rr(-50, -80, 100, 160, 16); ctx.fill(); // inner lining
-    for (let i = 0; i < 8; i++) { const px = -42 + (i % 2) * 44, py = -70 + Math.floor(i / 2) * 36; ctx.fillStyle = i % 3 ? '#16a34a' : TEA; rr(px, py, 40, 32, 4); ctx.fill(); ctx.fillStyle = '#fff'; font(900, 11); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('RİZE', px + 20, py + 16); }
-    ctx.fillStyle = '#4b3621'; ctx.beginPath(); ctx.moveTo(-60, -90); ctx.lineTo(-60 - open * 90, 40); ctx.lineTo(-60 - open * 70, 120); ctx.lineTo(-50, 110); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(60, -90); ctx.lineTo(60 + open * 90, 40); ctx.lineTo(60 + open * 70, 120); ctx.lineTo(50, 110); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#4b3621'; rr(-60, -110, 120, 40, 14); ctx.fill();
-    ctx.fillStyle = '#e0a47a'; ctx.beginPath(); ctx.arc(0, -140, 34, 0, 7); ctx.fill();
-    ctx.fillStyle = '#111'; rr(-34, -150, 68, 16, 5); ctx.fill(); // sunglasses
-    ctx.fillStyle = '#292524'; ctx.beginPath(); ctx.ellipse(0, -168, 60, 14, 0, 0, 7); ctx.fill(); rr(-36, -210, 72, 44, 10); ctx.fill(); // fedora
-    ctx.restore();
+  const r = TL.kara, s = 2.05, HY = 1150;
+  shot(t, r, 1.0, 1.2, 540, 960, 600, 900, () => {
+    ctx.fillStyle = '#0b1020'; ctx.fillRect(-300, -300, W + 600, H + 600);
+    ctx.fillStyle = '#1f2937'; ctx.fillRect(-100, 300, 340, 1200); ctx.fillRect(860, 260, 400, 1240);
+    for (let r2 = 0; r2 < 6; r2++) { ctx.fillStyle = rnd(r2) > .5 ? '#fbbf2455' : '#11182788'; ctx.fillRect(40, 360 + r2 * 150, 70, 90); ctx.fillRect(930, 340 + r2 * 150, 70, 90); }
+    ctx.fillStyle = '#111827'; ctx.fillRect(-300, 1430, W + 600, H);
+    ctx.fillStyle = '#374151'; ctx.fillRect(760, 420, 14, 1010); ctx.fillStyle = '#fde68a'; ctx.beginPath(); ctx.ellipse(740, 420, 46, 14, 0, 0, 7); ctx.fill();
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createLinearGradient(0, 420, 0, 1450); lg.addColorStop(0, 'rgba(253,230,138,.45)'); lg.addColorStop(1, 'rgba(253,230,138,.02)'); ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(700, 425); ctx.lineTo(780, 425); ctx.lineTo(1000, 1450); ctx.lineTo(340, 1450); ctx.fill(); ctx.restore();
     // customer, amazed
-    human(330, 1250, 1.3, { shirt: '#334155', hair: '#111', hairStyle: 'short', face: 'shock', skin: '#e9b48a', t, shadow: false });
-    // fog
-    for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(148,163,184,.08)'; ctx.beginPath(); ctx.ellipse((i * 260 + t * 30) % 1400 - 200, 1240 + (i % 2) * 40, 300, 60, 0, 0, 7); ctx.fill(); }
+    person(250, HY + 40, 1.8, { shirt: '#334155', hair: '#111', hairStyle: 'short', stubble: true, face: 'shock', skin: '#e9b48a', t, shadow: true, look: 1, pose: 'down', hands: [[-62, 10], [60, -40]] });
+    // seller opens his trench coat: clear zip bags of loose tea
+    const open = easeOut(clamp((t - r[0] - .6) / .5)), inner = 4 + open * 58;
+    person(640, HY, s, { shirt: '#1f2937', pants: '#111', coat: '#5b4630', coatOpen: open, hat: 'fedora', sunglasses: true, stubble: true, mustache: true, hair: '#1c1917', hairStyle: 'short', face: 'sly', skin: '#d9a37a', t, bob: 1, shadow: true,
+      hands: [[-inner - 6, -78], [inner + 6, -78]], handShape: ['fist', 'fist'],
+      lining: op => { for (let i = 0; i < 6; i++) { const c = i % 2 ? 1 : -1, row = Math.floor(i / 2); teaBagPack(c * 30, -50 + row * 62, 46, 56, (rnd(i) - .5) * .2, 'RİZE'); } } });
+    for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(148,163,184,.08)'; ctx.beginPath(); ctx.ellipse((i * 260 + t * 30) % 1400 - 200, 1440 + (i % 2) * 40, 300, 60, 0, 0, 7); ctx.fill(); }
   });
-  speech(760, 700, 'Abi taze Rize var, gel bak!', vis(t, r[0] + .9, r[1] + .3, .2, .2));
-  spot(620, 1000, 650, .7); grain(t, .08);
+  speech(760, 640, 'Abi taze Rize var, gel bak!', vis(t, r[0] + .9, r[1] + .3, .2, .2));
+  spot(620, 1000, 680, .65); grain(t, .08);
 }
 
 // ---------- 7. Rize: the last tea leaf locked in a bank vault ----------
 function kasaScene(t) {
   const r = TL.kasa;
-  shot(t, r, 1.0, 1.55, 540, 960, 540, 900, () => {
+  shot(t, r, 1.0, 1.5, 540, 960, 540, 900, () => {
     const g = ctx.createRadialGradient(540, 900, 50, 540, 900, 1000); g.addColorStop(0, '#374151'); g.addColorStop(1, '#030712'); ctx.fillStyle = g; ctx.fillRect(-200, -200, W + 400, H + 400);
-    // vault door
     ctx.fillStyle = '#6b7280'; ctx.beginPath(); ctx.arc(540, 900, 520, 0, 7); ctx.fill(); ctx.fillStyle = '#1f2937'; ctx.beginPath(); ctx.arc(540, 900, 470, 0, 7); ctx.fill();
     for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; ctx.fillStyle = '#9ca3af'; ctx.beginPath(); ctx.arc(540 + Math.cos(a) * 495, 900 + Math.sin(a) * 495, 14, 0, 7); ctx.fill(); }
-    // laser grid
     ctx.strokeStyle = 'rgba(239,68,68,.7)'; ctx.lineWidth = 3; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(140, 640 + i * 90 + Math.sin(t * 2 + i) * 6); ctx.lineTo(940, 700 + i * 80); ctx.stroke(); }
-    // pedestal + glass dome + single leaf in a spotlight
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; const sg = ctx.createLinearGradient(0, 300, 0, 1000); sg.addColorStop(0, 'rgba(255,255,220,.35)'); sg.addColorStop(1, 'rgba(255,255,220,0)'); ctx.fillStyle = sg; ctx.beginPath(); ctx.moveTo(500, 300); ctx.lineTo(580, 300); ctx.lineTo(700, 1000); ctx.lineTo(380, 1000); ctx.fill(); ctx.restore();
     ctx.fillStyle = '#d1d5db'; rr(450, 960, 180, 240, 10); ctx.fill(); ctx.fillStyle = '#9ca3af'; rr(430, 950, 220, 30, 8); ctx.fill();
     ctx.save(); ctx.translate(540, 880); ctx.rotate(Math.sin(t * 1.5) * .1); ctx.fillStyle = '#16a34a'; ctx.beginPath(); ctx.moveTo(0, -60); ctx.quadraticCurveTo(46, -10, 0, 50); ctx.quadraticCurveTo(-46, -10, 0, -60); ctx.fill(); ctx.strokeStyle = '#14532d'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -50); ctx.lineTo(0, 46); ctx.stroke(); ctx.restore();
     glow(540, 880, 140, 'rgba(134,239,172,A)', .4);
     ctx.fillStyle = 'rgba(219,234,254,.18)'; ctx.beginPath(); ctx.arc(540, 900, 110, Math.PI, 0); ctx.lineTo(650, 955); ctx.lineTo(430, 955); ctx.closePath(); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 4; ctx.stroke();
-    // two guards
-    [240, 840].forEach((x, i) => { human(x, 1240, 1.4, { shirt: '#111827', pants: '#111827', hair: '#111', hairStyle: 'short', cap: '#111827', glasses: true, face: 'angry', skin: '#d9a37a', t, bob: i, shadow: false }); });
+    [[200, '#c68642'], [880, '#e0a47a']].forEach(([x, sk], i) => person(x, 1130, 1.75, { shirt: '#f8fafc', jacket: '#111827', tie: '#111', pants: '#111827', hair: '#111', hairStyle: 'short', sunglasses: true, face: 'stern', skin: sk, pose: 'clasp', handShape: ['fist', 'open'], t, bob: i, shadow: true }));
   });
   pill('🇹🇷 RİZE · MERKEZ BANKASI KASASI', 540, 1250, { size: 32, bg: '#111c', fg: '#fff', alpha: clamp((t - r[0] - .4) / .3) });
   grain(t, .06);
