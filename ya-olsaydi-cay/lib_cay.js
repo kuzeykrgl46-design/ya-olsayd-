@@ -76,7 +76,7 @@ function personHead(o) {
   if (old) { ctx.strokeStyle = shade(skin, -.22); ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(-16, -28); ctx.quadraticCurveTo(0, -31, 16, -28); ctx.moveTo(-12, -23); ctx.quadraticCurveTo(0, -25, 12, -23);
     ctx.moveTo(-12, 16); ctx.quadraticCurveTo(-16, 24, -14, 30); ctx.moveTo(12, 16); ctx.quadraticCurveTo(16, 24, 14, 30); ctx.stroke(); }
   // eyes
-  const k = face === 'shock' ? 1.4 : face === 'sleepy' ? .25 : face === 'angry' || face === 'stern' ? .8 : face === 'sly' ? .55 : 1;
+  const k = face === 'shock' ? 1.4 : face === 'stunned' ? 1.2 : face === 'sleepy' ? .25 : face === 'angry' || face === 'stern' ? .8 : face === 'sly' ? .55 : 1;
   const closed = blink && ((t + bob * 1.37) % 3.9) < .11;
   [-16, 16].forEach(ex => {
     if (sunglasses) return;
@@ -94,7 +94,7 @@ function personHead(o) {
   const B = {
     calm: [[-25, -16, -8, -17], [8, -17, 25, -16]], happy: [[-25, -17, -8, -20], [8, -20, 25, -17]], shock: [[-25, -24, -8, -27], [8, -27, 25, -24]],
     angry: [[-25, -20, -7, -12], [7, -12, 25, -20]], stern: [[-25, -15, -7, -13], [7, -13, 25, -15]], cry: [[-25, -12, -8, -20], [8, -20, 25, -12]],
-    sad: [[-25, -12, -8, -20], [8, -20, 25, -12]], sly: [[-25, -16, -8, -15], [8, -22, 25, -25]], sleepy: [[-25, -14, -8, -14], [8, -14, 25, -14]], shout: [[-25, -22, -7, -15], [7, -15, 25, -22]],
+    sad: [[-25, -12, -8, -20], [8, -20, 25, -12]], stunned: [[-25, -21, -8, -24], [8, -24, 25, -21]], sly: [[-25, -16, -8, -15], [8, -22, 25, -25]], sleepy: [[-25, -14, -8, -14], [8, -14, 25, -14]], shout: [[-25, -22, -7, -15], [7, -15, 25, -22]],
   }[face] || [[-25, -16, -8, -17], [8, -17, 25, -16]];
   B.forEach(([a, b, c, d]) => { ctx.moveTo(a, b); ctx.quadraticCurveTo((a + c) / 2, Math.min(b, d) - 2, c, d); }); ctx.stroke();
   if (glasses) { ctx.strokeStyle = '#222'; ctx.lineWidth = 2.6; ctx.beginPath(); rr(-28, -12, 23, 18, 6); rr(5, -12, 23, 18, 6); ctx.moveTo(-5, -4); ctx.lineTo(5, -4); ctx.stroke(); }
@@ -117,6 +117,7 @@ function personHead(o) {
   else if (face === 'shock') { ctx.beginPath(); ctx.ellipse(0, my + 2, 7, 10, 0, 0, 7); ctx.fill(); }
   else if (face === 'shout') { ctx.beginPath(); ctx.ellipse(0, my + 2, 13, 11, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(-9, my - 8, 18, 4); }
   else if (face === 'happy') { ctx.beginPath(); ctx.moveTo(-13, my - 3); ctx.quadraticCurveTo(0, my + 13, 13, my - 3); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(-9, my - 3, 18, 3.5); }
+  else if (face === 'stunned') { ctx.beginPath(); ctx.moveTo(-8, my + 3); ctx.quadraticCurveTo(0, my - 1, 8, my + 3); ctx.stroke(); }
   else if (face === 'angry' || face === 'sad' || face === 'cry') { ctx.beginPath(); ctx.moveTo(-11, my + 4); ctx.quadraticCurveTo(0, my - 5, 11, my + 4); ctx.stroke(); if (face === 'cry') { ctx.beginPath(); ctx.ellipse(0, my + 1, 8, 4, 0, 0, 7); ctx.fill(); } }
   else if (face === 'sly') { ctx.beginPath(); ctx.moveTo(-10, my + 1); ctx.quadraticCurveTo(4, my + 4, 13, my - 4); ctx.stroke(); }
   else { ctx.beginPath(); ctx.moveTo(-9, my); ctx.quadraticCurveTo(0, my + 2, 9, my); ctx.stroke(); }
@@ -245,3 +246,6 @@ function talkAt(t, a, b, rate = 6.2) {
   const fade = clamp((t - a) / .08) * clamp((b - t) / .08);
   return Math.sin(ph * Math.PI) * (.55 + .45 * rnd(syl * 7 + 3)) * fade;
 }
+
+// a short open-mouth surprise, then the mouth closes and the eyes stay wide
+function surprised(t, at) { return t < at + .7 ? 'shock' : 'stunned'; }

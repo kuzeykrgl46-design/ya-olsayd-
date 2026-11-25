@@ -100,9 +100,9 @@ function kahvaltiScene(t) {
     chairBack(330, TY - 40, 2.0); chairBack(800, TY - 40, 1.7, '#8a5530');
     const lid = clamp((t - r[0] - .8) / .6);
     // dad reaches to the teapot lid, daughter waits with her glass
-    person(330, TY - 40, 2.0, { ...DAD, seated: true, face: t > r[0] + 1.6 ? 'shock' : 'happy', look: .6, t, shadow: false,
+    person(330, TY - 40, 2.0, { ...DAD, seated: true, face: t > r[0] + 1.6 ? surprised(t, r[0] + 1.6) : 'happy', look: .6, t, shadow: false,
       handsW: [[250, TY - 60], [560 + lid * 10, TY - 250 - lid * 40]], handShape: ['open', 'fist'] });
-    person(800, TY - 40, 1.7, { shirt: '#f472b6', hair: '#6b3e26', hairStyle: 'bun', female: true, skin: '#f1c5a0', seated: true, face: t > r[0] + 1.6 ? 'shock' : 'happy', look: -.5, t, bob: 2, shadow: false,
+    person(800, TY - 40, 1.7, { shirt: '#f472b6', hair: '#6b3e26', hairStyle: 'bun', female: true, skin: '#f1c5a0', seated: true, face: t > r[0] + 1.6 ? surprised(t, r[0] + 1.75) : 'happy', look: -.5, t, bob: 2, shadow: false,
       handsW: [[730, TY - 60], [880, TY - 60]] });
     familyTable(540, TY, 900, t);
     breakfastS(500, TY - 30, .62, t);
@@ -120,7 +120,7 @@ function babaScene(t) {
   blurred(10, () => { kitchenBack(t); });
   shot(t, r, 1.0, 1.12, 540, 960, 540, 900, () => {
     const shake = t > r[0] + .4 ? Math.sin(t * 40) * 2 : 0;
-    const hands = person(540 + shake, hy, s, { ...DAD, seated: true, face: 'shock', talk: talkAt(t, r[0] + .5, r[0] + 2.1), t, shadow: false, look: .7,
+    const hands = person(540 + shake, hy, s, { ...DAD, seated: true, face: surprised(t, r[0]), talk: talkAt(t, r[0] + .5, r[0] + 2.1), t, shadow: false, look: .7,
       handsW: [[300, 1020], [800, 1160]], handShape: ['fist', 'fist'] }).hands;
     // fork with a slice of cheese (left hand)
     const [fx, fy] = hands[0];
@@ -207,7 +207,7 @@ function kizScene(t) {
   livingRoomTR(t);
   sofaTR(-20, 520, HY); sofaTR(700, 360, HY, '#8a2a2a');
   person(130, SY, s, { shirt: '#f8fafc', jacket: '#1e3a8a', tie: '#94a3b8', hair: '#111', hairStyle: 'side', face: 'happy', skin: '#e9b48a', seated: true, t, shadow: false, hands: [[-30, 4], [36, 8]], handShape: ['open', 'open'] });
-  person(350, SY, s, { dressTop: '#6d597a', dress: '#4c3b5a', skin: '#e9b48a', scarf: '#c77dff', female: true, face: t > zoomAt ? 'shock' : 'happy', seated: true, t, bob: 1, shadow: false, hands: [[-10, 0], [12, 0]], look: .6 });
+  person(350, SY, s, { dressTop: '#6d597a', dress: '#4c3b5a', skin: '#e9b48a', scarf: '#c77dff', female: true, face: t > zoomAt ? surprised(t, zoomAt) : 'happy', seated: true, t, bob: 1, shadow: false, hands: [[-10, 0], [12, 0]], look: .6 });
   person(880, SY, s, { shirt: '#9ca3af', vest: '#374151', hair: '#777', hairStyle: 'bald', mustache: true, old: true, face: t > zoomAt ? 'angry' : 'stern', pose: 'crossed', skin: '#d9a37a', seated: true, t, bob: 2, shadow: false, look: -.6 });
   // coffee table with a doily and a bowl of lokum
   ctx.fillStyle = '#5b3a1e'; ctx.fillRect(330, 1480, 16, 120); ctx.fillRect(734, 1480, 16, 120);
@@ -215,7 +215,7 @@ function kizScene(t) {
   ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.ellipse(470, 1466, 44, 14, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#fbcfe8'; for (let i = 0; i < 4; i++) rr(446 + i * 12, 1452, 11, 11, 3), ctx.fill();
   // bride standing, serving with an empty tray
   const sway = Math.sin(t * 3) * 3;
-  person(610, 1300, s * .95, { dressTop: '#fbcfe8', dress: '#f9a8d4', hair: '#5a3825', hairStyle: 'long', female: true, face: 'shock', skin: '#f3c9a5', t, bob: 3, shadow: true, look: .8,
+  person(610, 1300, s * .95, { dressTop: '#fbcfe8', dress: '#f9a8d4', hair: '#5a3825', hairStyle: 'long', female: true, face: surprised(t, r[0]), skin: '#f3c9a5', t, bob: 3, shadow: true, look: .8,
     handsW: [[530 + sway, 1215], [690 + sway, 1215]], handShape: ['fist', 'fist'] });
   ctx.save(); ctx.translate(610 + sway, 1205); ctx.fillStyle = '#c0a062'; ctx.beginPath(); ctx.ellipse(0, 0, 115, 26, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#8b6d2f'; ctx.lineWidth = 6; ctx.stroke(); ctx.restore();
   [560, 610, 660].forEach(x => teaGlass(x + sway, 1176, .34, 0, false));
@@ -224,14 +224,51 @@ function kizScene(t) {
   if (t > zoomAt && t < zoomAt + .35) { ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 6; for (let i = 0; i < 16; i++) { const a = i / 16 * 6.28; ctx.beginPath(); ctx.moveTo(540 + Math.cos(a) * 300, 900 + Math.sin(a) * 300); ctx.lineTo(540 + Math.cos(a) * 700, 900 + Math.sin(a) * 700); ctx.stroke(); } }
 }
 
-// ---------- 5. kahve: okey stopped, uncles stare at empty glasses ----------
+// ---------- 5. kahvehane: the okey game stops, uncles stare at empty glasses ----------
+function kahvehaneBack(t) {
+  // walls: wood panelling below, smoky cream above
+  const wg = ctx.createLinearGradient(0, 0, 0, 1100); wg.addColorStop(0, '#5c4a32'); wg.addColorStop(1, '#8a7350'); ctx.fillStyle = wg; ctx.fillRect(-300, -300, W + 600, 1500);
+  ctx.fillStyle = '#4a2f1d'; ctx.fillRect(-300, 980, W + 600, 500); ctx.fillStyle = '#3a2416'; for (let i = -3; i < 14; i++) ctx.fillRect(i * 110, 980, 6, 500); ctx.fillStyle = '#2a1a10'; ctx.fillRect(-300, 972, W + 600, 14);
+  // big front window with the street and the shop sign (mirrored from inside)
+  ctx.fillStyle = '#1e3a5f'; rr(-120, 300, 470, 520, 8); ctx.fill(); ctx.fillStyle = '#334e68'; ctx.fillRect(-120, 640, 470, 180);
+  for (let i = 0; i < 4; i++) { ctx.fillStyle = 'rgba(253,230,138,.5)'; ctx.fillRect(-90 + i * 110, 380, 50, 70); }
+  ctx.strokeStyle = '#3a2416'; ctx.lineWidth = 16; ctx.strokeRect(-120, 300, 470, 520); ctx.beginPath(); ctx.moveTo(115, 300); ctx.lineTo(115, 820); ctx.stroke();
+  ctx.save(); ctx.translate(115, 560); ctx.scale(-1, 1); ctx.fillStyle = 'rgba(255,255,255,.55)'; font(900, 50); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('KIRAATHANE', 0, 0); ctx.restore();
+  // TV on the wall (match on) + clock + flag pennant
+  ctx.fillStyle = '#111'; rr(420, 300, 250, 160, 8); ctx.fill(); ctx.fillStyle = '#15803d'; ctx.fillRect(432, 312, 226, 136); ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 2; ctx.strokeRect(462, 330, 166, 100); ctx.beginPath(); ctx.moveTo(545, 330); ctx.lineTo(545, 430); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(760, 360, 46, 0, 7); ctx.fill(); ctx.strokeStyle = '#111'; ctx.lineWidth = 5; ctx.stroke(); ctx.beginPath(); ctx.moveTo(760, 360); ctx.lineTo(760, 330); ctx.moveTo(760, 360); ctx.lineTo(782, 372); ctx.stroke();
+  ctx.fillStyle = TR_RED; ctx.beginPath(); ctx.moveTo(860, 300); ctx.lineTo(1060, 330); ctx.lineTo(860, 360); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(905, 330, 16, 0, 7); ctx.fill(); ctx.fillStyle = TR_RED; ctx.beginPath(); ctx.arc(911, 330, 13, 0, 7); ctx.fill();
+  // tea counter (ocak) on the right: big kettles gone cold, upside-down glasses
+  ctx.fillStyle = '#6b3f22'; rr(700, 560, 420, 420, 8); ctx.fill(); ctx.fillStyle = '#7c4a2a'; ctx.fillRect(690, 550, 440, 26);
+  for (let i = 0; i < 2; i++) { ctx.save(); ctx.translate(800 + i * 170, 470); ctx.scale(.45, .45); caydanlik(0, 0, 1, 0, t); ctx.restore(); }
+  ctx.fillStyle = '#a16207'; ctx.fillRect(700, 470, 410, 10);
+  for (let i = 0; i < 8; i++) { ctx.save(); ctx.translate(730 + i * 48, 650); ctx.scale(.28, -.28); teaGlass(0, 0, 1, 0, false); ctx.restore(); }
+  ctx.fillStyle = '#fef3c7'; rr(760, 720, 300, 90, 8); ctx.fill(); ctx.fillStyle = TEA; font(900, 34); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('BUGÜN ÇAY YOK!', 910, 766);
+  // back tables with other uncles (out of focus)
+  blurred(5, () => {
+    [[150, '#5b5b5b', 'flatcap'], [380, '#3d5a80', null]].forEach(([x, sh, h], i) => person(x, 1000, 1.05, { shirt: sh, vest: i ? null : '#6f4e37', hair: '#999', hairStyle: i ? 'bald' : 'grey', mustache: true, hat: h, face: 'stunned', seated: true, t, bob: i + 4, shadow: false, pose: 'table' }));
+    ctx.fillStyle = '#2d6a4f'; ctx.fillRect(60, 990, 420, 26); ctx.fillStyle = '#4a2f1d'; ctx.fillRect(60, 1014, 420, 16);
+  });
+  ctx.fillStyle = '#3b2a1e'; ctx.fillRect(-300, 1350, W + 600, H); // floor
+  ctx.fillStyle = 'rgba(0,0,0,.15)'; for (let i = 0; i < 10; i++) ctx.fillRect(-300 + i * 170, 1350, 4, 800);
+  // smoke haze
+  for (let i = 0; i < 5; i++) { ctx.fillStyle = 'rgba(255,240,220,.05)'; ctx.beginPath(); ctx.ellipse((i * 300 + t * 20) % 1500 - 200, 520 + i * 60, 360, 70, 0, 0, 7); ctx.fill(); }
+}
+function istaka(x, y, w, rot, back = true) { // wooden okey rack with its tiles
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  ctx.fillStyle = '#a0632f'; rr(-w / 2, -6, w, 22, 5); ctx.fill(); ctx.fillStyle = '#7c4a20'; rr(-w / 2, 12, w, 10, 4); ctx.fill();
+  const n = Math.floor(w / 22);
+  for (let i = 0; i < n; i++) { ctx.fillStyle = back ? '#fffaf0' : '#fffaf0'; rr(-w / 2 + 4 + i * 22, -30, 19, 26, 3); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.15)'; ctx.lineWidth = 1; ctx.stroke();
+    if (!back) { ctx.fillStyle = ['#e63946', '#111', '#e09f00', '#2563eb'][i % 4]; font(900, 13); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String((i * 5) % 13 + 1), -w / 2 + 13.5 + i * 22, -17); } }
+  ctx.restore();
+}
 function kahveScene(t) {
   const r = TL.kahve, HY = 1290, s = 1.75;
   shot(t, r, 1.12, 1.0, 600, 1000, 500, 1000, () => {
-    const wg = ctx.createLinearGradient(0, 0, 0, H); wg.addColorStop(0, '#3b2418'); wg.addColorStop(1, '#1c110b'); ctx.fillStyle = wg; ctx.fillRect(-300, -300, W + 600, H + 600);
-    ctx.fillStyle = '#2a1a10'; for (let i = 0; i < 6; i++) ctx.fillRect(-100 + i * 240, 0, 10, 1400); // wall panels
-    ctx.fillStyle = '#111'; ctx.fillRect(536, 0, 8, 470); ctx.fillStyle = '#d97706'; ctx.beginPath(); ctx.moveTo(460, 520); ctx.lineTo(620, 520); ctx.lineTo(565, 460); ctx.lineTo(515, 460); ctx.fill();
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createLinearGradient(0, 520, 0, 1400); lg.addColorStop(0, 'rgba(255,200,120,.35)'); lg.addColorStop(1, 'rgba(255,200,120,0)'); ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(460, 520); ctx.lineTo(620, 520); ctx.lineTo(980, 1400); ctx.lineTo(100, 1400); ctx.fill(); ctx.restore();
+    kahvehaneBack(t);
+    // hanging lamp over our table
+    ctx.fillStyle = '#111'; ctx.fillRect(536, 0, 6, 560); ctx.fillStyle = '#b45309'; ctx.beginPath(); ctx.moveTo(470, 600); ctx.lineTo(610, 600); ctx.lineTo(562, 548); ctx.lineTo(518, 548); ctx.fill();
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createLinearGradient(0, 600, 0, 1400); lg.addColorStop(0, 'rgba(255,200,120,.3)'); lg.addColorStop(1, 'rgba(255,200,120,0)'); ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(470, 600); ctx.lineTo(610, 600); ctx.lineTo(960, 1400); ctx.lineTo(120, 1400); ctx.fill(); ctx.restore();
     [[290, '#6b4f3a'], [540, '#7a5236'], [790, '#6b4f3a']].forEach(([x, c]) => chairBack(x, HY - 30, s, c));
     const D = [
       { shirt: '#e7e5e4', vest: '#6f4e37', hair: '#d0d0d0', hairStyle: 'grey', mustache: true, hat: 'flatcap', hatColor: '#4a3b35', skin: '#d9a37a', old: true },
@@ -239,18 +276,24 @@ function kahveScene(t) {
       { shirt: '#e2e8f0', vest: '#495057', hair: '#bbb', hairStyle: 'bald', mustache: true, glasses: true, skin: '#e0a47a', old: true },
     ];
     const lift = easeOut(clamp((t - r[0] - .4) / .6));
-    person(290, HY - 30, s, { ...D[0], seated: true, face: 'sad', t, shadow: false, look: .5, handsW: [[230, HY - 70], [370, HY - 70]], handShape: ['open', 'fist'] });
-    const mid = person(540, HY - 30, s, { ...D[1], seated: true, face: 'shock', t, bob: 1, shadow: false, look: .9, handsW: [[470, HY - 70], [610 + lift * 30, HY - 70 - lift * 210]], handShape: ['open', 'fist'] }).hands;
-    person(790, HY - 30, s, { ...D[2], seated: true, face: 'shock', t, bob: 2, shadow: false, look: -.6, pose: 'handsHead' });
-    // small okey table
-    ctx.fillStyle = '#4a2f1d'; ctx.fillRect(250, HY + 40, 24, 260); ctx.fillRect(806, HY + 40, 24, 260);
-    ctx.fillStyle = '#2d6a4f'; ctx.beginPath(); ctx.moveTo(250, HY - 80); ctx.lineTo(830, HY - 80); ctx.lineTo(880, HY); ctx.lineTo(200, HY); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#7f5539'; rr(190, HY - 4, 700, 46, 8); ctx.fill();
-    for (let i = 0; i < 18; i++) { ctx.save(); ctx.translate(250 + rnd(i) * 580, HY - 66 + rnd(i + 4) * 50); ctx.rotate((rnd(i + 8) - .5) * 1.4); ctx.fillStyle = '#fffaf0'; rr(-10, -14, 20, 28, 3); ctx.fill(); ctx.fillStyle = ['#e63946', '#111', '#ffb703', '#3b82f6'][i % 4]; font(900, 12); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i % 13 + 1), 0, 0); ctx.restore(); }
-    teaGlass(330, HY - 50, .42, 0); teaGlass(750, HY - 50, .42, 0);
+    // left uncle froze with a tile in his hand, middle one lifts his empty glass to the light, right one grabs his head
+    const L = person(290, HY - 30, s, { ...D[0], seated: true, face: 'sad', t, shadow: false, look: .5, handsW: [[240, HY - 110], [370, HY - 160]], handShape: ['open', 'fist'] }).hands;
+    const mid = person(540, HY - 30, s, { ...D[1], seated: true, face: surprised(t, r[0]), t, bob: 1, shadow: false, look: .9, handsW: [[470, HY - 100], [610 + lift * 30, HY - 100 - lift * 180]], handShape: ['open', 'fist'] }).hands;
+    person(790, HY - 30, s, { ...D[2], seated: true, face: surprised(t, r[0] + .3), t, bob: 2, shadow: false, look: -.6, pose: 'handsHead' });
+    ctx.save(); ctx.translate(L[1][0], L[1][1] - 18); ctx.rotate(.2); ctx.fillStyle = '#fffaf0'; rr(-12, -16, 24, 32, 3); ctx.fill(); ctx.fillStyle = '#e63946'; font(900, 16); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('7', 0, 0); ctx.restore();
+    // okey table: green felt, racks for each player, the draw pile in the middle
+    ctx.fillStyle = '#4a2f1d'; ctx.fillRect(250, HY + 40, 24, 300); ctx.fillRect(806, HY + 40, 24, 300);
+    ctx.fillStyle = '#2d6a4f'; ctx.beginPath(); ctx.moveTo(240, HY - 110); ctx.lineTo(840, HY - 110); ctx.lineTo(900, HY); ctx.lineTo(180, HY); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#7f5539'; ctx.lineWidth = 10; ctx.stroke();
+    ctx.fillStyle = '#7f5539'; rr(170, HY - 4, 740, 44, 8); ctx.fill();
+    istaka(290, HY - 96, 200, 0, true); istaka(540, HY - 96, 200, 0, true); istaka(790, HY - 96, 200, 0, true);
+    for (let i = 0; i < 5; i++) { ctx.fillStyle = '#fffaf0'; rr(500 + (i % 3) * 4, HY - 60 - i * 6, 26, 18, 3); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.stroke(); } // pile
+    ctx.fillStyle = '#fffaf0'; rr(380, HY - 50, 22, 30, 3); ctx.fill(); rr(660, HY - 48, 22, 30, 3); ctx.fill(); // discarded tiles
+    teaGlass(410, HY - 70, .38, 0); teaGlass(700, HY - 70, .38, 0);
+    istaka(540, HY + 60, 420, 0, false); // our own rack in the foreground
     teaGlass(mid[1][0] + 4, mid[1][1] - 26, .55, 0, false); // the empty glass he lifts to the light
   });
-  spot(540, 900, 720, .6); dust(t, 30, '255,200,120'); grain(t, .06);
+  spot(540, 900, 760, .5); dust(t, 25, '255,200,120'); grain(t, .06);
 }
 
 // ---------- 6. black market: "Abi taze Rize var" ----------
@@ -264,7 +307,7 @@ function karaScene(t) {
     ctx.fillStyle = '#374151'; ctx.fillRect(760, 420, 14, 1010); ctx.fillStyle = '#fde68a'; ctx.beginPath(); ctx.ellipse(740, 420, 46, 14, 0, 0, 7); ctx.fill();
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; const lg = ctx.createLinearGradient(0, 420, 0, 1450); lg.addColorStop(0, 'rgba(253,230,138,.45)'); lg.addColorStop(1, 'rgba(253,230,138,.02)'); ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(700, 425); ctx.lineTo(780, 425); ctx.lineTo(1000, 1450); ctx.lineTo(340, 1450); ctx.fill(); ctx.restore();
     // customer, amazed
-    person(250, HY + 40, 1.8, { shirt: '#334155', hair: '#111', hairStyle: 'short', stubble: true, face: 'shock', skin: '#e9b48a', t, shadow: true, look: 1, pose: 'down', hands: [[-62, 10], [60, -40]] });
+    person(250, HY + 40, 1.8, { shirt: '#334155', hair: '#111', hairStyle: 'short', stubble: true, face: surprised(t, r[0] + .7), skin: '#e9b48a', t, shadow: true, look: 1, pose: 'down', hands: [[-62, 10], [60, -40]] });
     // seller opens his trench coat: clear zip bags of loose tea
     const open = easeOut(clamp((t - r[0] - .6) / .5)), inner = 4 + open * 58;
     person(640, HY, s, { shirt: '#1f2937', pants: '#111', coat: '#5b4630', coatOpen: open, hat: 'fedora', sunglasses: true, stubble: true, mustache: true, hair: '#1c1917', hairStyle: 'short', face: 'sly', talk: talkAt(t, r[0] + .9, r[0] + 2.6), skin: '#d9a37a', t, bob: 1, shadow: true,
