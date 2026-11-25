@@ -105,9 +105,10 @@ function personHead(o) {
   if (mustache) { ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(-17, 26); ctx.quadraticCurveTo(-10, 17, 0, 20); ctx.quadraticCurveTo(10, 17, 17, 26); ctx.quadraticCurveTo(8, 23, 0, 25); ctx.quadraticCurveTo(-8, 23, -17, 26); ctx.fill(); }
   // mouth
   ctx.fillStyle = '#5c1a1a'; ctx.strokeStyle = '#5c1a1a'; ctx.lineWidth = 2.6; const my = 30 + (mustache ? 1 : 0);
-  const talk = o.talk || 0;
-  if (talk > .04) { // speaking: open mouth follows the syllables
-    const mw = 10 + talk * 3, mh = 2 + talk * 13;
+  const talk = o.talk;
+  if (talk != null && talk < .12) { ctx.beginPath(); ctx.moveTo(-10, my + 1); ctx.quadraticCurveTo(0, my + 3, 10, my + 1); ctx.stroke(); } // lips closed between syllables
+  else if (talk != null) { // speaking: open mouth follows the syllables
+    const mw = 9 + talk * 4, mh = 1 + talk * 14;
     ctx.beginPath(); ctx.ellipse(0, my + 2, mw, mh, 0, 0, 7); ctx.fill();
     ctx.save(); ctx.beginPath(); ctx.ellipse(0, my + 2, mw, mh, 0, 0, 7); ctx.clip();
     ctx.fillStyle = '#fff'; ctx.fillRect(-mw, my + 2 - mh, mw * 2, Math.min(5, mh * .45));
@@ -131,7 +132,7 @@ function person(x, y, s, o = {}) {
   const { skin, shirt, pants, shoes, seated, t, bob } = o;
   const breathe = Math.sin(t * 2.2 + bob) * 1.2;
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-  const footY = seated ? 162 : 172;
+  const footY = seated ? 146 : 172;
   if (o.shadow) { ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(0, footY + 8, 70, 12, 0, 0, 7); ctx.fill(); }
   // ---- legs ----
   const lower = o.dress || pants;
@@ -140,12 +141,15 @@ function person(x, y, s, o = {}) {
     ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-48, -6); ctx.lineTo(48, -6); ctx.quadraticCurveTo(66, 90, 70, 162); ctx.lineTo(-70, 162); ctx.quadraticCurveTo(-66, 90, -48, -6); ctx.fill();
     ctx.fillStyle = shoes; ctx.beginPath(); ctx.ellipse(-22, 168, 20, 8, 0, 0, 7); ctx.ellipse(22, 168, 20, 8, 0, 0, 7); ctx.fill();
   } else if (seated) {
-    ctx.fillStyle = shade(lower, .06); rr(-48, -6, 46, 52, 18); ctx.fill(); rr(2, -6, 46, 52, 18); ctx.fill();
-    ctx.fillStyle = lower; rr(-44, 34, 36, 124, 14); ctx.fill(); rr(8, 34, 36, 124, 14); ctx.fill();
-    ctx.fillStyle = shade(lower, -.2); ctx.fillRect(-28, 44, 4, 100); ctx.fillRect(24, 44, 4, 100);
-    ctx.fillStyle = shade(lower, .14); ctx.beginPath(); ctx.ellipse(-25, 36, 27, 19, 0, 0, 7); ctx.ellipse(25, 36, 27, 19, 0, 0, 7); ctx.fill(); // knees toward camera
-    if (o.dress) { ctx.fillStyle = o.dress; ctx.beginPath(); ctx.moveTo(-50, -6); ctx.lineTo(50, -6); ctx.lineTo(62, 60); ctx.quadraticCurveTo(0, 74, -62, 60); ctx.fill(); }
-    ctx.fillStyle = shoes; ctx.beginPath(); ctx.ellipse(-26, footY, 24, 10, 0, 0, 7); ctx.ellipse(26, footY, 24, 10, 0, 0, 7); ctx.fill();
+    // shins (feet a little apart), then the lap seen slightly from above, then the knees facing the camera
+    ctx.fillStyle = shade(lower, -.08); ctx.beginPath(); ctx.moveTo(-50, 56); ctx.lineTo(-12, 56); ctx.lineTo(-16, 142); ctx.lineTo(-48, 142); ctx.fill(); ctx.beginPath(); ctx.moveTo(12, 56); ctx.lineTo(50, 56); ctx.lineTo(48, 142); ctx.lineTo(16, 142); ctx.fill();
+    ctx.fillStyle = shoes; ctx.beginPath(); ctx.ellipse(-33, footY, 25, 11, 0, 0, 7); ctx.ellipse(33, footY, 25, 11, 0, 0, 7); ctx.fill();
+    const lg = ctx.createLinearGradient(0, -6, 0, 60); lg.addColorStop(0, shade(lower, .02)); lg.addColorStop(1, shade(lower, .2));
+    ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(-50, -8); ctx.lineTo(50, -8); ctx.lineTo(56, 52); ctx.quadraticCurveTo(0, 60, -56, 52); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = shade(lower, -.25); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(0, 56); ctx.stroke();
+    ctx.fillStyle = shade(lower, .1); ctx.beginPath(); ctx.ellipse(-29, 56, 27, 13, 0, 0, 7); ctx.ellipse(29, 56, 27, 13, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(-50, 66, 100, 10); // shadow under the knees
+    if (o.dress) { ctx.fillStyle = o.dress; ctx.beginPath(); ctx.moveTo(-52, -8); ctx.lineTo(52, -8); ctx.lineTo(62, 96); ctx.quadraticCurveTo(0, 108, -62, 96); ctx.fill(); ctx.strokeStyle = shade(o.dress, -.2); ctx.beginPath(); ctx.moveTo(-28, 58); ctx.quadraticCurveTo(0, 66, 28, 58); ctx.stroke(); }
   } else {
     ctx.fillStyle = pants; rr(-42, 0, 38, 166, 14); ctx.fill(); rr(4, 0, 38, 166, 14); ctx.fill();
     ctx.fillStyle = shade(pants, -.22); ctx.fillRect(-4, 6, 8, 150);
@@ -235,9 +239,9 @@ function teaBagPack(x, y, w, h, rot = 0, label = 'TAZE RİZE') {
 
 // mouth openness for a spoken line between a and b (syllable rhythm with short word pauses); replaced by word timings after the voiceover
 function talkAt(t, a, b, rate = 6.2) {
-  if (t < a || t > b) return 0;
+  if (t < a || t > b) return null;
   const u = (t - a) * rate, syl = Math.floor(u), ph = u - syl;
-  if (rnd(syl * 13 + Math.floor(a * 10)) < .16) return 0; // little pause between words
+  if (rnd(syl * 13 + Math.floor(a * 10)) < .16) return 0.0; // little pause between words
   const fade = clamp((t - a) / .08) * clamp((b - t) / .08);
   return Math.sin(ph * Math.PI) * (.55 + .45 * rnd(syl * 7 + 3)) * fade;
 }

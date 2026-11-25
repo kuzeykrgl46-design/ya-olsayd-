@@ -21,7 +21,7 @@
 <canvas id="c" width="1080" height="1920"></canvas>
 <div class="ctrl">
   <button id="play">▶ Oynat</button>
-  <input id="seek" type="range" min="0" max="35" step="0.01" value="0">
+  <input id="seek" type="range" min="0" max="36.5" step="0.01" value="0">
   <span id="tm">0.0s</span>
 </div>
 <script src="timeline1.js"></script>
@@ -1464,9 +1464,10 @@ function personHead(o) {
   if (mustache) { ctx.fillStyle = hair; ctx.beginPath(); ctx.moveTo(-17, 26); ctx.quadraticCurveTo(-10, 17, 0, 20); ctx.quadraticCurveTo(10, 17, 17, 26); ctx.quadraticCurveTo(8, 23, 0, 25); ctx.quadraticCurveTo(-8, 23, -17, 26); ctx.fill(); }
   // mouth
   ctx.fillStyle = '#5c1a1a'; ctx.strokeStyle = '#5c1a1a'; ctx.lineWidth = 2.6; const my = 30 + (mustache ? 1 : 0);
-  const talk = o.talk || 0;
-  if (talk > .04) { // speaking: open mouth follows the syllables
-    const mw = 10 + talk * 3, mh = 2 + talk * 13;
+  const talk = o.talk;
+  if (talk != null && talk < .12) { ctx.beginPath(); ctx.moveTo(-10, my + 1); ctx.quadraticCurveTo(0, my + 3, 10, my + 1); ctx.stroke(); } // lips closed between syllables
+  else if (talk != null) { // speaking: open mouth follows the syllables
+    const mw = 9 + talk * 4, mh = 1 + talk * 14;
     ctx.beginPath(); ctx.ellipse(0, my + 2, mw, mh, 0, 0, 7); ctx.fill();
     ctx.save(); ctx.beginPath(); ctx.ellipse(0, my + 2, mw, mh, 0, 0, 7); ctx.clip();
     ctx.fillStyle = '#fff'; ctx.fillRect(-mw, my + 2 - mh, mw * 2, Math.min(5, mh * .45));
@@ -1490,7 +1491,7 @@ function person(x, y, s, o = {}) {
   const { skin, shirt, pants, shoes, seated, t, bob } = o;
   const breathe = Math.sin(t * 2.2 + bob) * 1.2;
   ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-  const footY = seated ? 162 : 172;
+  const footY = seated ? 146 : 172;
   if (o.shadow) { ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(0, footY + 8, 70, 12, 0, 0, 7); ctx.fill(); }
   // ---- legs ----
   const lower = o.dress || pants;
@@ -1499,12 +1500,15 @@ function person(x, y, s, o = {}) {
     ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-48, -6); ctx.lineTo(48, -6); ctx.quadraticCurveTo(66, 90, 70, 162); ctx.lineTo(-70, 162); ctx.quadraticCurveTo(-66, 90, -48, -6); ctx.fill();
     ctx.fillStyle = shoes; ctx.beginPath(); ctx.ellipse(-22, 168, 20, 8, 0, 0, 7); ctx.ellipse(22, 168, 20, 8, 0, 0, 7); ctx.fill();
   } else if (seated) {
-    ctx.fillStyle = shade(lower, .06); rr(-48, -6, 46, 52, 18); ctx.fill(); rr(2, -6, 46, 52, 18); ctx.fill();
-    ctx.fillStyle = lower; rr(-44, 34, 36, 124, 14); ctx.fill(); rr(8, 34, 36, 124, 14); ctx.fill();
-    ctx.fillStyle = shade(lower, -.2); ctx.fillRect(-28, 44, 4, 100); ctx.fillRect(24, 44, 4, 100);
-    ctx.fillStyle = shade(lower, .14); ctx.beginPath(); ctx.ellipse(-25, 36, 27, 19, 0, 0, 7); ctx.ellipse(25, 36, 27, 19, 0, 0, 7); ctx.fill(); // knees toward camera
-    if (o.dress) { ctx.fillStyle = o.dress; ctx.beginPath(); ctx.moveTo(-50, -6); ctx.lineTo(50, -6); ctx.lineTo(62, 60); ctx.quadraticCurveTo(0, 74, -62, 60); ctx.fill(); }
-    ctx.fillStyle = shoes; ctx.beginPath(); ctx.ellipse(-26, footY, 24, 10, 0, 0, 7); ctx.ellipse(26, footY, 24, 10, 0, 0, 7); ctx.fill();
+    // shins (feet a little apart), then the lap seen slightly from above, then the knees facing the camera
+    ctx.fillStyle = shade(lower, -.08); ctx.beginPath(); ctx.moveTo(-50, 56); ctx.lineTo(-12, 56); ctx.lineTo(-16, 142); ctx.lineTo(-48, 142); ctx.fill(); ctx.beginPath(); ctx.moveTo(12, 56); ctx.lineTo(50, 56); ctx.lineTo(48, 142); ctx.lineTo(16, 142); ctx.fill();
+    ctx.fillStyle = shoes; ctx.beginPath(); ctx.ellipse(-33, footY, 25, 11, 0, 0, 7); ctx.ellipse(33, footY, 25, 11, 0, 0, 7); ctx.fill();
+    const lg = ctx.createLinearGradient(0, -6, 0, 60); lg.addColorStop(0, shade(lower, .02)); lg.addColorStop(1, shade(lower, .2));
+    ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(-50, -8); ctx.lineTo(50, -8); ctx.lineTo(56, 52); ctx.quadraticCurveTo(0, 60, -56, 52); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = shade(lower, -.25); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 6); ctx.lineTo(0, 56); ctx.stroke();
+    ctx.fillStyle = shade(lower, .1); ctx.beginPath(); ctx.ellipse(-29, 56, 27, 13, 0, 0, 7); ctx.ellipse(29, 56, 27, 13, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(-50, 66, 100, 10); // shadow under the knees
+    if (o.dress) { ctx.fillStyle = o.dress; ctx.beginPath(); ctx.moveTo(-52, -8); ctx.lineTo(52, -8); ctx.lineTo(62, 96); ctx.quadraticCurveTo(0, 108, -62, 96); ctx.fill(); ctx.strokeStyle = shade(o.dress, -.2); ctx.beginPath(); ctx.moveTo(-28, 58); ctx.quadraticCurveTo(0, 66, 28, 58); ctx.stroke(); }
   } else {
     ctx.fillStyle = pants; rr(-42, 0, 38, 166, 14); ctx.fill(); rr(4, 0, 38, 166, 14); ctx.fill();
     ctx.fillStyle = shade(pants, -.22); ctx.fillRect(-4, 6, 8, 150);
@@ -1594,9 +1598,9 @@ function teaBagPack(x, y, w, h, rot = 0, label = 'TAZE RİZE') {
 
 // mouth openness for a spoken line between a and b (syllable rhythm with short word pauses); replaced by word timings after the voiceover
 function talkAt(t, a, b, rate = 6.2) {
-  if (t < a || t > b) return 0;
+  if (t < a || t > b) return null;
   const u = (t - a) * rate, syl = Math.floor(u), ph = u - syl;
-  if (rnd(syl * 13 + Math.floor(a * 10)) < .16) return 0; // little pause between words
+  if (rnd(syl * 13 + Math.floor(a * 10)) < .16) return 0.0; // little pause between words
   const fade = clamp((t - a) / .08) * clamp((b - t) / .08);
   return Math.sin(ph * Math.PI) * (.55 + .45 * rnd(syl * 7 + 3)) * fade;
 }
@@ -1749,7 +1753,7 @@ function haberScene(t) {
     for (let i = 0; i < 3; i++) { const x = 120 + i * 300; ctx.fillStyle = '#0f172a'; rr(x, 330, 260, 170, 10); ctx.fill(); ctx.fillStyle = i === 1 ? TEA : '#1d4ed8'; rr(x + 10, 340, 240, 150, 6); ctx.fill(); ctx.fillStyle = '#fff'; font(900, 26); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(i === 1 ? '☕ ❌' : 'CANLI', x + 130, 415); }
     glow(540, 700, 500, 'rgba(96,165,250,A)', .25);
     const wipe = Math.sin(t * 5) * 6;
-    const hands = person(540, hy, s, { shirt: '#f8fafc', jacket: '#1e293b', tie: TEA, hair: '#2b1d14', hairStyle: 'side', face: 'cry', talk: talkAt(t, r[0] + .6, r[0] + 1.4, 4) * .6 + talkAt(t, r[0] + 2.2, r[0] + 3.2, 4) * .6, skin: '#e9b48a', seated: true, t, shadow: false,
+    const hands = person(540, hy, s, { shirt: '#f8fafc', jacket: '#1e293b', tie: TEA, hair: '#2b1d14', hairStyle: 'side', face: 'cry', talk: talkAt(t, r[0] + 3.0, r[0] + 4.6, 5), skin: '#e9b48a', seated: true, t, shadow: false,
       handsOverFace: true, handsW: [[490 + wipe, 790], [720, 1050]], handShape: ['fist', 'open'] }).hands;
     for (let i = 0; i < 3; i++) { const p = (t * 1.2 + i * .33) % 1; ctx.fillStyle = `rgba(147,197,253,${1 - p})`; ctx.beginPath(); ctx.ellipse(i === 1 ? 590 : 495, 775 + p * 110, 7, 11, 0, 0, 7); ctx.fill(); }
     ctx.fillStyle = '#fff'; ctx.save(); ctx.translate(hands[0][0] - 6, hands[0][1] - 18); ctx.rotate(-.3); rr(-26, -22, 52, 44, 8); ctx.fill(); ctx.restore(); // tissue
@@ -1764,6 +1768,7 @@ function haberScene(t) {
   ctx.fillStyle = '#111'; ctx.fillRect(0, 1270, W, 50); ctx.fillStyle = '#fde047'; font(800, 30);
   const tick = 'Ülkede çay alarmı · Kahvaltılar iptal · Misafirlere su ikram ediliyor · Uzmanlar sakin olun diyor · '; const tw = ctx.measureText(tick).width; const off = (t * 220) % tw;
   ctx.fillText(tick + tick, -off, 1296);
+  speech(330, 560, 'Sevgili seyirciler… çay… BİTTİ! 😭', vis(t, r[0] + 2.9, r[1] + .3, .2, .2));
   grain(t, .05);
 }
 
@@ -1793,6 +1798,7 @@ function sofaTR(x0, w, y, col = '#7f1d1d') { // back + cushions (drawn before th
   ctx.fillStyle = col; const n = Math.max(1, Math.round(w / 230)); for (let i = 0; i < n; i++) { rr(x0 + 24 + i * (w - 48) / n, y - 270, (w - 48) / n - 12, 250, 34); ctx.fill(); }
   ctx.fillStyle = shade(col, .08); rr(x0 + 10, y - 10, w - 20, 70, 24); ctx.fill(); // seat
   ctx.fillStyle = 'rgba(255,255,255,.85)'; for (let i = 0; i < n; i++) { ctx.beginPath(); ctx.ellipse(x0 + 24 + (i + .5) * (w - 48) / n, y - 260, 50, 16, 0, 0, 7); ctx.fill(); } // lace doilies
+  sofaFront(x0, w, y, col);
 }
 function sofaFront(x0, w, y, col = '#7f1d1d') { // armrests + base (drawn after the sitters)
   ctx.fillStyle = shade(col, -.25); rr(x0 + 10, y + 50, w - 20, 100, 20); ctx.fill();
@@ -1801,16 +1807,15 @@ function sofaFront(x0, w, y, col = '#7f1d1d') { // armrests + base (drawn after 
 }
 function kizScene(t) {
   if (t > TL.kiz[0] + 2.2) sendPrompt('Annene gönder', 1440, vis(t, TL.kiz[0] + 2.2, TL.kiz[1], .25, .2));
-  const r = TL.kiz, zoomAt = r[0] + 1.6, HY = 1230, s = 1.95;
+  const r = TL.kiz, zoomAt = r[0] + 1.6, HY = 1230, s = 1.95, SY = HY - 26; // SY: hips resting on the seat
   const zp = clamp((t - zoomAt) / .25), z = t < zoomAt ? lerp(1.0, 1.06, clamp((t - r[0]) / 1.6)) : lerp(1.06, 1.6, easeOut(zp));
   const fx = t < zoomAt ? 540 : lerp(540, 860, zp), fy = t < zoomAt ? 980 : lerp(980, 880, zp);
-  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-fx, -fy);
+  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(z, z); ctx.translate(-fx, -fy - 120); // lifted so the laps clear the subtitles
   livingRoomTR(t);
   sofaTR(-20, 520, HY); sofaTR(700, 360, HY, '#8a2a2a');
-  person(130, HY, s, { shirt: '#f8fafc', jacket: '#1e3a8a', tie: '#94a3b8', hair: '#111', hairStyle: 'side', face: 'happy', skin: '#e9b48a', seated: true, t, shadow: false, hands: [[-30, 4], [36, 8]], handShape: ['open', 'open'] });
-  person(350, HY, s, { dressTop: '#6d597a', dress: '#4c3b5a', skin: '#e9b48a', scarf: '#c77dff', female: true, face: t > zoomAt ? 'shock' : 'happy', seated: true, t, bob: 1, shadow: false, hands: [[-10, 0], [12, 0]], look: .6 });
-  person(880, HY, s, { shirt: '#9ca3af', vest: '#374151', hair: '#777', hairStyle: 'bald', mustache: true, old: true, face: t > zoomAt ? 'angry' : 'stern', pose: 'crossed', skin: '#d9a37a', seated: true, t, bob: 2, shadow: false, look: -.6 });
-  sofaFront(-20, 520, HY); sofaFront(700, 360, HY, '#8a2a2a');
+  person(130, SY, s, { shirt: '#f8fafc', jacket: '#1e3a8a', tie: '#94a3b8', hair: '#111', hairStyle: 'side', face: 'happy', skin: '#e9b48a', seated: true, t, shadow: false, hands: [[-30, 4], [36, 8]], handShape: ['open', 'open'] });
+  person(350, SY, s, { dressTop: '#6d597a', dress: '#4c3b5a', skin: '#e9b48a', scarf: '#c77dff', female: true, face: t > zoomAt ? 'shock' : 'happy', seated: true, t, bob: 1, shadow: false, hands: [[-10, 0], [12, 0]], look: .6 });
+  person(880, SY, s, { shirt: '#9ca3af', vest: '#374151', hair: '#777', hairStyle: 'bald', mustache: true, old: true, face: t > zoomAt ? 'angry' : 'stern', pose: 'crossed', skin: '#d9a37a', seated: true, t, bob: 2, shadow: false, look: -.6 });
   // coffee table with a doily and a bowl of lokum
   ctx.fillStyle = '#5b3a1e'; ctx.fillRect(330, 1480, 16, 120); ctx.fillRect(734, 1480, 16, 120);
   ctx.fillStyle = '#7c4a2a'; ctx.beginPath(); ctx.ellipse(540, 1480, 240, 50, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(540, 1474, 130, 26, 0, 0, 7); ctx.fill();
