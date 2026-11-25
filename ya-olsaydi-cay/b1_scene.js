@@ -405,7 +405,7 @@ function render(t) {
     ctx.save(); ctx.globalAlpha = clamp(a); fn(t); ctx.restore();
     if (TITLES[k] && t < r[1]) title(TITLES[k], r[0] + .15, r[1], t, 350);
   });
-  if (t < TL.kahvalti[1]) title([['ÇAY', 120, '#fff'], ['BİTTİ! ☕', 120, GOLD]], .1, TL.kahvalti[1], t, 380);
+  if (t < TL.kahvalti[1]) title([['ÇAY', 120, '#fff'], ['BİTTİ! ☕', 120, GOLD]], -1, TL.kahvalti[1], t, 380); // already fully on screen in the first frame
   if (t >= TL.kiz[0] && t < TL.kiz[0] + 1.6) title([['KIZ İSTEME', 96, '#fff']], TL.kiz[0] + .1, TL.kiz[0] + 1.6, t, 350);
   // the question: on screen only (not in the voiceover)
   if (t >= TL.soru[0] - .05 && t < TL.soru[1] + .3) {
@@ -418,9 +418,8 @@ function render(t) {
   if (t >= TL.harita[0]) { title([['TÜRKİYE ÇAYSIZ', 80, '#fff'], ['KAÇ GÜN DAYANIR?', 80, GOLD]], TL.harita[0] + .2, TL.fin[0], t, 380); }
   if (t >= TL.fin[0]) {
     title([['ÇAYSIZ DAYANAMAYACAK', 64, '#fff'], ['ARKADAŞINI', 96, GOLD], ['ETİKETLE 🏷️', 96, GOLD]], TL.fin[0] + .1, 99, t, 420);
-    pill("⏳ BÖLÜM 2'DE", 540, 1560, { size: 46, bg: GOLD, fg: '#111', alpha: clamp((t - TL.fin[0] - .4) / .25) });
+    pill("🔔 TAKİP ET · BÖLÜM 2 YAKINDA", 540, 1560, { size: 46, bg: GOLD, fg: '#111', alpha: clamp((t - TL.fin[0] - .4) / .25) });
   }
   subtitles(t);
   badge();
-  if (t < .15) { ctx.fillStyle = `rgba(0,0,0,${1 - t / .15})`; ctx.fillRect(0, 0, W, H); }
 }

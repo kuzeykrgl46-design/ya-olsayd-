@@ -77,7 +77,7 @@ function personHead(o) {
     ctx.moveTo(-12, 16); ctx.quadraticCurveTo(-16, 24, -14, 30); ctx.moveTo(12, 16); ctx.quadraticCurveTo(16, 24, 14, 30); ctx.stroke(); }
   // eyes
   const k = face === 'shock' ? 1.4 : face === 'stunned' ? 1.2 : face === 'sleepy' ? .25 : face === 'angry' || face === 'stern' ? .8 : face === 'sly' ? .55 : 1;
-  const closed = blink && ((t + bob * 1.37) % 3.9) < .11;
+  const closed = blink && ((t + bob * 1.37 + 1.5) % 3.9) < .11; // offset: nobody blinks in the first frame
   [-16, 16].forEach(ex => {
     if (sunglasses) return;
     if (closed || face === 'cry') { ctx.strokeStyle = '#2b1d14'; ctx.lineWidth = 2.6; ctx.beginPath(); face === 'cry' ? ctx.arc(ex, 0, 8, Math.PI * 1.15, Math.PI * 1.85) : (ctx.moveTo(ex - 9, -2), ctx.quadraticCurveTo(ex, 3, ex + 9, -2)); ctx.stroke(); return; }
