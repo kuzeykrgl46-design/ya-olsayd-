@@ -22,7 +22,7 @@ TL['soru'] = [round(TL['kiz'][0] + 1.0, 2), TL['kiz'][1]]
 TL['kizZoom'] = cv(W[find('yoksa', idx[3])]['start']) - .2
 def line(first, last):
     return [[cv(w['start']), cv(w['end']), re.sub(r'[^\wçğıöşüÇĞİÖŞÜ]', '', w['text'])] for w in W[first:last + 1]]
-TL['talk'] = {'baba': line(find('Peynir'), find('ki', find('Peynir'))), 'spiker': line(find('Sevgili'), find('bitti')), 'kara': line(find('Abi'), find('bak', find('Abi')))}
+TL['talk'] = {'baba': line(find('Peynir'), find('ki', find('Peynir'))), 'spiker': line(find('Sevgili'), find('bitti')), 'kara': line(find('Abi'), find('bak', find('Abi'))), 'kizBaba': line(find('çay', idx[3]), find('yok', find('çay', idx[3]) + 3))}
 TL['dur'] = dur
 subs = []
 for n, (i, j) in enumerate(zip(idx, idx[1:] + [len(W)])):

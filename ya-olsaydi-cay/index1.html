@@ -1829,7 +1829,7 @@ function kizScene(t) {
   sofaTR(-20, 520, HY); sofaTR(700, 360, HY, '#8a2a2a');
   person(130, SY, s, { shirt: '#f8fafc', jacket: '#1e3a8a', tie: '#94a3b8', hair: '#111', hairStyle: 'side', face: 'happy', skin: '#e9b48a', seated: true, t, shadow: false, hands: [[-30, 4], [36, 8]], handShape: ['open', 'open'] });
   person(350, SY, s, { dressTop: '#6d597a', dress: '#4c3b5a', skin: '#e9b48a', scarf: '#c77dff', female: true, face: t > zoomAt ? surprised(t, zoomAt) : 'happy', seated: true, t, bob: 1, shadow: false, hands: [[-10, 0], [12, 0]], look: .6 });
-  person(880, SY, s, { shirt: '#9ca3af', vest: '#374151', hair: '#777', hairStyle: 'bald', mustache: true, old: true, face: t > zoomAt ? 'angry' : 'stern', pose: 'crossed', skin: '#d9a37a', seated: true, t, bob: 2, shadow: false, look: -.6 });
+  person(880, SY, s, { shirt: '#9ca3af', vest: '#374151', hair: '#777', hairStyle: 'bald', mustache: true, old: true, face: t > zoomAt ? 'angry' : 'stern', talk: say(t, 'kizBaba', zoomAt, zoomAt + 1.3), pose: 'crossed', skin: '#d9a37a', seated: true, t, bob: 2, shadow: false, look: -.6 });
   // coffee table with a doily and a bowl of lokum
   ctx.fillStyle = '#5b3a1e'; ctx.fillRect(330, 1480, 16, 120); ctx.fillRect(734, 1480, 16, 120);
   ctx.fillStyle = '#7c4a2a'; ctx.beginPath(); ctx.ellipse(540, 1480, 240, 50, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(540, 1474, 130, 26, 0, 0, 7); ctx.fill();
@@ -1841,7 +1841,7 @@ function kizScene(t) {
   ctx.save(); ctx.translate(610 + sway, 1205); ctx.fillStyle = '#c0a062'; ctx.beginPath(); ctx.ellipse(0, 0, 115, 26, 0, 0, 7); ctx.fill(); ctx.strokeStyle = '#8b6d2f'; ctx.lineWidth = 6; ctx.stroke(); ctx.restore();
   [560, 610, 660].forEach(x => teaGlass(x + sway, 1176, .34, 0, false));
   ctx.restore();
-  if (t > zoomAt) stampHit(540, 640, 'ÇAY YOKSA KIZ DA YOK!', TEA, (t - zoomAt - .1) / .3);
+  if (t > zoomAt) stampHit(540, 1170, 'ÇAY YOKSA KIZ DA YOK!', TEA, (t - zoomAt - .1) / .3);
   if (t > zoomAt && t < zoomAt + .35) { ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 6; for (let i = 0; i < 16; i++) { const a = i / 16 * 6.28; ctx.beginPath(); ctx.moveTo(540 + Math.cos(a) * 300, 900 + Math.sin(a) * 300); ctx.lineTo(540 + Math.cos(a) * 700, 900 + Math.sin(a) * 700); ctx.stroke(); } }
 }
 
