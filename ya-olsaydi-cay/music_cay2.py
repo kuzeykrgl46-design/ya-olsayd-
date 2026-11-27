@@ -5,7 +5,7 @@ from scipy.signal import butter, sosfilt, fftconvolve
 from scipy.io import wavfile
 
 SR = 44100
-DUR = 29.5
+DUR = 28.92
 N = int(SR * DUR)
 rng = np.random.default_rng(7)
 L = np.zeros(N)

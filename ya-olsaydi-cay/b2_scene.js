@@ -74,7 +74,7 @@ function hookScene(t) {
   const sw = (Math.sin(t * 9) + 1) / 2;
   ctx.save(); ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = `rgba(239,68,68,${.35 + sw * .55})`; ctx.fillRect(-100, -100, W + 200, H + 200); ctx.restore();
   const tilt = Math.sin(t * 14) * .25;
-  const hands = person(540, hy, s, { ...DAD, seated: true, face: 'shout', tilt: Math.sin(t * 7) * .05, t, shadow: false, look: 0,
+  const hands = person(540, hy, s, { ...DAD, seated: true, face: 'shout', talk: say(t, 'hook', .3, 3.9), tilt: Math.sin(t * 7) * .05, t, shadow: false, look: 0,
     handsW: [[330, 760 + Math.sin(t * 14) * 30], [760, 1040]], handShape: ['fist', 'spread'] }).hands;
   // teapot upside down in the left fist, shaken; a single drop falls
   ctx.save(); ctx.translate(hands[0][0], hands[0][1]); ctx.rotate(Math.PI * .72 + tilt); caydanlik(-20, 40, .62, 1, t); ctx.restore();
@@ -113,14 +113,14 @@ function rizeScene(t) {
     ctx.save(); ctx.translate(hh[1][0] + 20, hh[1][1] - 40); ctx.strokeStyle = '#78350f'; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(-30, 40); ctx.lineTo(0, 0); ctx.stroke(); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 10; ctx.fillStyle = 'rgba(191,219,254,.35)'; ctx.beginPath(); ctx.arc(26, -30, 44, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore();
     ctx.fillStyle = '#0b2e1a'; ctx.fillRect(-300, 1520, W + 600, 600);
   });
-  speech(700, 640, 'Tek yaprak bulan kahramandır!', vis(t, r[0] + .8, r[1] + .2, .2, .2));
+  speech(700, 640, 'Tek yaprak bulan kahramandır!', vis(t, sayStart('rize', r[0] + 1.1) - .3, r[1] + .2, .2, .2));
   commentCard(t, r[0] + 1.0, r[1], '@ll.o6taha', '"1 güne anca!" 😂');
   grain(t, .05);
 }
 
 // ---------- 3. İzmir: "we drink coffee" ... then hunting for a samovar ----------
 function izmirScene(t) {
-  const r = TL.izmir, mid = r[0] + 1.9, after = t > mid;
+  const r = TL.izmir, mid = TL.izmirMid || r[0] + 1.9, after = t > mid;
   shot(t, r, 1.06, 1.0, 540, 960, 540, 960, () => {
     const g = ctx.createLinearGradient(0, 0, 0, 1100); g.addColorStop(0, '#fb923c'); g.addColorStop(1, '#fde68a'); ctx.fillStyle = g; ctx.fillRect(-300, -300, W + 600, 1500);
     ctx.fillStyle = '#fef3c7'; ctx.beginPath(); ctx.arc(300, 820, 90, 0, 7); ctx.fill();
@@ -253,7 +253,7 @@ function render(t) {
   scoreboard(t);
   if (t >= TL.fin[0]) {
     title([['SENİN ŞEHRİN', 84, '#fff'], ['KAÇ GÜN', 100, GOLD], ['DAYANIR? 👇', 100, GOLD]], TL.fin[0] + .1, 99, t, 420);
-    pill('⏳ BÖLÜM 3: SON POŞET', 540, 1180, { size: 44, bg: GOLD, fg: '#111', alpha: clamp((t - TL.fin[0] - .5) / .25) });
+    pill('⏳ SIRADAKİ BÖLÜM: SON POŞET', 540, 1180, { size: 44, bg: GOLD, fg: '#111', alpha: clamp((t - TL.fin[0] - .5) / .25) });
     pill('🔔 Takip et, kaçırma', 540, 1560, { size: 32, bg: '#111c', fg: '#fff', alpha: clamp((t - TL.fin[0] - .9) / .25) });
   }
   subtitles(t);
