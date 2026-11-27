@@ -2123,7 +2123,7 @@ function hookScene(t) {
   const hands = person(540, hy, s, { ...DAD, seated: true, face: 'shout', tilt: Math.sin(t * 7) * .05, t, shadow: false, look: 0,
     handsW: [[330, 760 + Math.sin(t * 14) * 30], [760, 1040]], handShape: ['fist', 'spread'] }).hands;
   // teapot upside down in the left fist, shaken; a single drop falls
-  ctx.save(); ctx.translate(hands[0][0], hands[0][1]); ctx.rotate(Math.PI + tilt); caydanlik(0, 60, .55, 1, t); ctx.restore();
+  ctx.save(); ctx.translate(hands[0][0], hands[0][1]); ctx.rotate(Math.PI * .72 + tilt); caydanlik(-20, 40, .62, 1, t); ctx.restore();
   const dp = (t * 1.2) % 1; ctx.fillStyle = 'rgba(180,35,27,.8)'; ctx.beginPath(); ctx.ellipse(hands[0][0] + 10, hands[0][1] + 60 + dp * 220, 6, 9, 0, 0, 7); ctx.fill();
   const tg = ctx.createLinearGradient(0, 1560, 0, 1920); tg.addColorStop(0, '#fff'); tg.addColorStop(1, '#e2e8f0'); ctx.fillStyle = tg; ctx.fillRect(-100, 1560, W + 200, 460);
   breakfastS(540, 1640, 1.1, t);
@@ -2246,7 +2246,7 @@ function babalarScene(t) {
 // ---------- 6. the secret: mum's hidden last tea bag ----------
 function anneScene(t) {
   const r = TL.anne;
-  shot(t, r, 1.0, 1.45, 540, 960, 700, 820, () => {
+  shot(t, r, 1.0, 1.28, 540, 960, 620, 860, () => {
     ctx.fillStyle = '#0b1020'; ctx.fillRect(-300, -300, W + 600, H + 600);
     ctx.fillStyle = '#111827'; ctx.fillRect(-300, 1300, W + 600, 800);
     // cupboard (doors swing open)
